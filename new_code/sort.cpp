@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <iostream>
+#include <cstddef>
 #include "sort.h"
 
 // finds the max of a given array

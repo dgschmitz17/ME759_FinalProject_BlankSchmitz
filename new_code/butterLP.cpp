@@ -16,6 +16,11 @@
 #include <stdio.h>
 #include <complex.h>
 #include <math.h>
+#include <iostream>
+#include <cstddef>
+
+// Provide some namespace shortcuts
+using std::cout;
 
 #define PI 3.1416
 #define complex _Complex
@@ -23,7 +28,7 @@
 void butterLP(int fc, int fs, double *B, double *A){
     int N = 2;
     if(fc >= fs/2){
-        printf("The low-pass cutoff frequency must be less than half the sample rate.");
+        cout << "The low-pass cutoff frequency must be less than half the sample rate.";
         exit(100);
     }// check that cutoff is below half the sample frequency
 

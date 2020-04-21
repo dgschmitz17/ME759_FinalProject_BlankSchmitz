@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <cstddef>
 #include "filter.h"
 
 double *filtfilt(double *unfiltered, int N, int fs, double low, double high){

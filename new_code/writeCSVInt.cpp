@@ -3,6 +3,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <cstddef>
+
+// Provide some namespace shortcuts
+using std::cout;
 
 void writeCSVInt(const char* filename, const int* data, size_t n_rows, size_t n_cols){
     FILE *fileOut = fopen(filename,"w"); // file name is passed as a function argument, open for write
@@ -20,7 +25,8 @@ void writeCSVInt(const char* filename, const int* data, size_t n_rows, size_t n_
     */
    
     for(i = 0 ; i < n_rows ; i++){
-        fprintf(fileOut,"%d",data[i]);
+        cout << fileOut;
+        cout << data[i] << "\n";
         if(i < n_rows){fputs("\n",fileOut);}
     }//end for
 

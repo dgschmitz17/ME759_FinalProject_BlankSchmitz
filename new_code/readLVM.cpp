@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <cstddef>
+
+// Provide some namespace shortcuts
+using std::cout;
 
 double ** readLVM(char *filename,int *numCols,int *numRows){
 //int main(void){
@@ -28,7 +33,7 @@ double ** readLVM(char *filename,int *numCols,int *numRows){
            
     // make sure the file exists
     if ( fileIn == NULL ) {
-        printf("Error! Could not open file.\n"); 
+        cout << "Error! Could not open file." << "\n"; 
         exit(-1);
     }// end if fileIn doesn't exist 
 
