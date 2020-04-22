@@ -27,7 +27,7 @@ int max_jon(const double* arr, size_t size){
 int *sort(const double* signalRef, size_t ts, size_t n, size_t tapRate, int* lead, int* trail){
 
     // initialize the new tap signal
-    double* signal = (double*)malloc(n*sizeof(double));
+    double* signal = new double[n];
 
     // get rid of aberrant negative values
     for (int i=1; i<n-1; i++){
@@ -41,10 +41,10 @@ int *sort(const double* signalRef, size_t ts, size_t n, size_t tapRate, int* lea
     // calculate the total number of push and pull taps
     double nTaps = n*(1/m);
     // create an array of booleans the size of signalRef
-    int* extended = (int*)malloc(n*sizeof(int));
-    int* retracted = (int*)malloc(n*sizeof(int));
-    int* leading = (int*)malloc((int)n*sizeof(int));
-    int* trailing = (int*)malloc((int)n*sizeof(int));
+    int* extended = new int[n];
+    int* retracted = new int[n];
+    int* leading = new int[n];
+    int* trailing = new int[n];
     // find pulse edges of the tap signal
     int j = 0; int k = 0; int flag = 0;
     double thresh = signalRef[max_jon(signalRef,n)]/2;
@@ -62,8 +62,8 @@ int *sort(const double* signalRef, size_t ts, size_t n, size_t tapRate, int* lea
             if (flag==1){trailing[k]=i; k++; flag=0;}
         }
     }
-    free(extended);
-    free(retracted);
+    delete[] extended;
+    delete[] retracted;
 
     // dynamically allocate memory to store leading and trailing indices
     int nLeading = 0; int nTrailing = 0;
@@ -97,8 +97,8 @@ int *sort(const double* signalRef, size_t ts, size_t n, size_t tapRate, int* lea
         }
     }
 
-    free(leading);
-    free(trailing);
+    delete[] leading;
+    delete[] trailing;
 
     *lead = nLeading;
     *trail = nTrailing;

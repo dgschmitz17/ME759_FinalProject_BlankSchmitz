@@ -9,9 +9,9 @@
 #include "filter.h"
 
 double *filtfilt(double *unfiltered, int N, int fs, double low, double high){
-    double *filtered = (double *) malloc(sizeof(double) * (N));
-    double *temp1 = (double *) malloc(sizeof(double) * (N));
-    double *temp2 = (double *) malloc(sizeof(double) * (N));
+    double *filtered = new double[N];
+    double *temp1 = new double[N];
+    double *temp2 = new double[N];
     // Get the filter coefficients
     double B[3];
     double A[3];
@@ -61,8 +61,8 @@ double *filtfilt(double *unfiltered, int N, int fs, double low, double high){
         }// end for j
     }// end for i
 
-   free(temp1);
-   free(temp2);
+   delete[] temp1;
+   delete[] temp2;
 
     return filtered;
 

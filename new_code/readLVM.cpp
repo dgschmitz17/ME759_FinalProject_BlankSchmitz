@@ -56,10 +56,10 @@ double ** readLVM(char *filename,int *numCols,int *numRows){
     rewind(fileIn); // reset file pointer to the beginning of the file
 
     // allocate memory for output matrix
-    double **matrixOut = (double **) malloc(sizeof(double *) * numDataCols);
+    double **matrixOut = new double*[numDataCols];
 
     for( i = 0 ; i < numDataCols ; i++ ){
-        matrixOut[i] = (double *) malloc(sizeof(double) * numDataRows);
+        matrixOut[i] = new double[numDataRows];
     }// end for columns to allocate memory
 
     // read the file again, but this time parse each column into its own array

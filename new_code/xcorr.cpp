@@ -9,7 +9,7 @@
 #include <math.h>
 
 double *normxcorr(double *templ, size_t lenT, double *ref, size_t lenR){
-    double *r = (double *) malloc(sizeof(double) * (lenR - lenT)); //array of correlation coefficients
+    double *r = new double[lenR - lenT]; //array of correlation coefficients
     double *seg; // subarray pointer
 
     double mult, A2, B2;
@@ -79,7 +79,7 @@ double computeTimeDelay(double *sig1, double *sig2, size_t indA, size_t indZ, do
     // compute time lag based on frame lag
     timeDelay = (frameDelay/sampleRate)*1000; // time delay in milliseconds
 
-    free(r);
+    delete[] r;
 
     return timeDelay;
 
