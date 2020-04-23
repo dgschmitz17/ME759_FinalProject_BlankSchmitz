@@ -13,9 +13,8 @@
  */
 
 // ----- LIBRARIES ----- //
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstdbool>
 #include <iostream>
 #include <chrono>
 #include <ratio>

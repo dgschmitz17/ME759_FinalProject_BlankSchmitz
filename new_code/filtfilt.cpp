@@ -2,8 +2,7 @@
  * This is the zero-phase digital filtering function (inspired by Matlab's filtfilt)
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
 #include <iostream>
 #include <cstddef>
 #include "filter.h"

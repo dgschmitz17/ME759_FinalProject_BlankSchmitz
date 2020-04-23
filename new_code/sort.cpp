@@ -2,9 +2,8 @@
  * This function sorts the tap signal into separate push and pull events that will be used in the xcorr function
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstdbool>
 #include <iostream>
 #include <cstddef>
 #include "sort.h"

@@ -1,8 +1,7 @@
 // Function to write data to a comma-separated file
 // Author: Dylan Schmitz
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
 #include <iostream>
 #include <cstddef>
 

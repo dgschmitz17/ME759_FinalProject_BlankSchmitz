@@ -2,9 +2,8 @@
  * This is the function that reads values from an .lvm file
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <string>
 #include <iostream>
 #include <cstddef>
 

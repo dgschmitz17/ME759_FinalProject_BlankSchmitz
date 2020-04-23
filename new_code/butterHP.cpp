@@ -12,10 +12,9 @@
  * The function currently supports only a 2nd order filter.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <complex.h>
-#include <math.h>
+#include <cstdlib>
+#include <complex>
+#include <cmath>
 #include <iostream>
 #include <cstddef>
 

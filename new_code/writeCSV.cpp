@@ -2,8 +2,7 @@
  * Function to write data to a comma-separated file
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
 #include <iostream>
 #include <cstddef>
 

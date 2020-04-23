@@ -3,10 +3,9 @@
  * computeTimeDelay: computes the delay between two shear wave arrivals in two signals for a given tap instance
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include <cstdlib>
+#include <string>
+#include <cmath>
 
 double *normxcorr(double *templ, size_t lenT, double *ref, size_t lenR){
     double *r = new double[lenR - lenT]; //array of correlation coefficients
