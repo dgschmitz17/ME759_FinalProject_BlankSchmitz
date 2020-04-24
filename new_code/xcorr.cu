@@ -112,14 +112,16 @@ __host__ void stencil(const float *image, const float *mask, float *output,
 } // end stencil
 */
 
-__host__ void computeTimeDelay(float *sig1, float *sig2, size_t *indA,
-                               size_t *indZ, float *timeDelay, size_t nInst,
-                               float *window, int sampleRate) {
+__host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
+                               size_t *indZ, float *waveSpeed, size_t nInst,
+                               float *window, int sampleRate,
+                               float travelDist) {
   float **templ = new float *[nInst];
   float **ref = new float *[nInst];
   float *rMax = new float[nInst];
   size_t *maxInd = new float[nInst];
   int *frameDelay = new int[nInst];
+  float *timeDelay = new float[nInst];
 
   float wo, theta, delta;
   int windowShift, k;
@@ -194,12 +196,15 @@ __host__ void computeTimeDelay(float *sig1, float *sig2, size_t *indA,
     // compute time lag based on frame lag
     timeDelay[inst] =
         (frameDelay[inst] / sampleRate) * 1000; // time delay in milliseconds
-  }                                             // end for each instance
+
+    waveSpeed[inst] = travelDist / timeDelay[inst];
+  } // end for each instance
 
   delete[] templ;
   delete[] ref;
   delete[] rMax;
   delete[] maxInd;
   delete[] frameDelay;
+  delete[] timeDelay;
 
 } // end computeTimeDelay
