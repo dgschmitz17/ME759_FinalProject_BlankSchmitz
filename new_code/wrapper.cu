@@ -1,9 +1,9 @@
 /* Authors: Blank, J. and Schmitz, D.
  * This is the main "wrapper" program that computes wave speed
  *
- * Function calls:
+ * Function calls: 
  *
- * Compile command: COMPILE COMMAND HERE
+ * Compile command: nvcc [FILENAMES HERE] -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -o wrapper
  */
 
 // ----- LIBRARIES ----- //
@@ -63,10 +63,11 @@ int main(int argc, char *argv[]) {
   dataMatrix = readLVM(fileIn, &numFields, &numSamples);
 
   // filter first accelerometer data
-  double *filteredAcc1, *filteredAcc2;
-  filteredAcc1 = filtfilt(dataMatrix[1], numSamples, sampleFreq, filter[0],
+  double *filteredAcc1; // cudaMallocManaged
+  double *filteredAcc2; // cudaMallocManaged
+  filtfilt(dataMatrix[1], filteredAcc1, numSamples, sampleFreq, filter[0],
                           filter[1]); // filter acc1 data
-  filteredAcc2 = filtfilt(dataMatrix[2], numSamples, sampleFreq, filter[0],
+  filtfilt(dataMatrix[2], filteredAcc2, numSamples, sampleFreq, filter[0],
                           filter[1]); // filter acc2 data
 
   /// sort the push and pull tap indices
@@ -124,8 +125,8 @@ int main(int argc, char *argv[]) {
     }
   } // if malloc based on relative push/release length
 
-  push = (float *)malloc(sizeof(double) * nPush);
-  release = (float *)malloc(sizeof(double) * nRelease);
+  push = (float *)malloc(sizeof(double) * nPush); // c++ new
+  release = (float *)malloc(sizeof(double) * nRelease);  // c++ new
 
   // set index arrays to larger needed size for push/release
   size_t nInds = (nRelease < nPush) ? nPush : nRelease;
@@ -182,6 +183,9 @@ int main(int argc, char *argv[]) {
   free(release);
   free(ind1);
   free(ind2);
+
+  cudaFree(filteredAcc1);
+  cudaFree(filteredAcc2);
 
   return 0;
 } // end main

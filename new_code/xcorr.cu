@@ -16,14 +16,14 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
                                  size_t lenR, float *r, size_t nInst) {
 
   // define shorthand for block and thread variables
-  int b = blockIdx.x;
-  int t = threadIdx.x;
+  int bidx = blockIdx.x;
+  int tidx = threadIdx.x;
   int tpb = blockDim.x;
-  int id = b * tpb + t;
+  int id = bidx * tpb + tidx;
 
   size_t nOps = (lenR - lenT + 1);
   size_t rInst = id / nOps;
-  size_t rOp = tid % nOps;
+  size_t rOp = tidx % nOps;
 
   size_t n = nInst * nOps;
 
@@ -75,7 +75,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
   } else {
     float *my_templ = templ[rInst];
     float *our_ref = ref[rInst];
-    float *my_ref = &ref[rOp];
+    float *my_ref = &our_ref[rOp];
     mult = 0;
     A2 = 0;
     B2 = 0;
@@ -91,33 +91,17 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
 } // end xcorr_kernel
 
-/*
-__host__ void stencil(const float *image, const float *mask, float *output,
-                      unsigned int n, unsigned int R,
-                      unsigned int threads_per_block) {
-  // determine size of dynamic shared memory per block
-  size_t nImage = threads_per_block + 2 * R;
-  size_t nMask = 2 * R + 1;
-  size_t nOutput = threads_per_block;
-  size_t shared_memory_size = sizeof(float) * (nImage + nMask + nOutput);
-
-  // compute number of blocks required
-  int number_of_blocks = (n + threads_per_block - 1) / threads_per_block;
-
-  // call the kernel
-  stencil_kernel<<<number_of_blocks, threads_per_block, shared_memory_size>>>(
-      image, mask, output, n, R);
-
-  cudaDeviceSynchronize();
-} // end stencil
-*/
-
+// Function computeWaveSpeed 
 __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
                                size_t *indZ, float *waveSpeed, size_t nInst,
                                float *window, int sampleRate,
                                float travelDist) {
-  float **templ = new float *[nInst];
-  float **ref = new float *[nInst];
+  float **templ = new float *[nInst];  // MANAGED MEMORY cudaMallocManaged((void **)&A, sizeof(float) * n * n);
+  float **ref = new float *[nInst];  // MANAGED MEMORY
+
+  cudaMallocManaged((void **)&templ, sizeof(float) * n * n);
+  cudaMallocManaged((void **)&ref, sizeof(float) * n * n);
+
   float *rMax = new float[nInst];
   size_t *maxInd = new float[nInst];
   int *frameDelay = new int[nInst];
@@ -148,7 +132,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
     // define the reference as a segment of sig2 starting at the same index as
     // templ
-    ref[i] = &sig2[indA + windowShift];
+    ref[i] = &sig2[indA[inst] + windowShift];
   } // end for
 
   // determine shared memory size
@@ -162,7 +146,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       sizeof(float); // temporary until shared memory is implemented
 
   // perform the cross-correlation between the template and reference signals
-  float *r = new float[nOps * nInst];
+  float *r = new float[nOps * nInst]; // MANAGED MEMORY
   size_t threads_per_block =
       1024; // may need to change depending on shared memory size
   size_t number_of_blocks =
@@ -200,11 +184,16 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
     waveSpeed[inst] = travelDist / timeDelay[inst];
   } // end for each instance
 
+  // clean up
   delete[] templ;
   delete[] ref;
   delete[] rMax;
   delete[] maxInd;
   delete[] frameDelay;
   delete[] timeDelay;
+
+  cudaFree(ref);
+  cudaFree(templ);
+  cudaFree(r);
 
 } // end computeTimeDelay

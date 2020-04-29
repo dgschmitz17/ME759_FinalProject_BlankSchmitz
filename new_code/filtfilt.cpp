@@ -7,8 +7,7 @@
 #include <cstddef>
 #include "filter.h"
 
-double *filtfilt(double *unfiltered, int N, int fs, double low, double high){
-    double *filtered = new double[N];
+void filtfilt(double *unfiltered, double *filtered, int N, int fs, double low, double high){
     double *temp1 = new double[N];
     double *temp2 = new double[N];
     // Get the filter coefficients
@@ -62,7 +61,5 @@ double *filtfilt(double *unfiltered, int N, int fs, double low, double high){
 
    delete[] temp1;
    delete[] temp2;
-
-    return filtered;
 
 }// end filtfilt
