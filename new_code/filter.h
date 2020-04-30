@@ -1,8 +1,8 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-void butterLP(int fc, int fs, double *B, double *A);
-void butterHP(int fc, int fs, double *B, double *A);
-double *filtfilt(double *unfiltered, int N, int fs, double low, double high);
+void butterLP(int fc, int fs, float *B, float *A);
+void butterHP(int fc, int fs, float *B, float *A);
+double *filtfilt(float *unfiltered, float *filtered, int N, int fs, float low, float high);
 
 #endif

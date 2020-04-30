@@ -1,11 +1,13 @@
 /* Authors: Blank, J. and Schmitz, D.
  * This is the main "wrapper" program that computes wave speed
  *
- * Function calls: 
+ * Function calls:
  *
- * Compile command: nvcc [FILENAMES HERE] -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -o wrapper
+ * Compile command: nvcc [FILENAMES HERE] -Xcompiler -O3 -Xcompiler -Wall
+ * -Xptxas -O3 -o wrapper
  *
- * Compile command: nvcc wrapper.cu xcorr.cu filt.cpp butterLP.cpp butterHP.cpp readLVM.cpp sort.cpp -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -o wrapper
+ * FILENAMES: wrapper.cu readLVM.cpp writeCSV.cpp butterHP.cpp butterLP.cpp
+ * filtfilt.cpp sort.cpp xcorr.cu
  */
 
 // ----- LIBRARIES ----- //
@@ -18,19 +20,20 @@
 #include "fileIO.h"
 #include "filter.h"
 #include "sort.h"
-#include "xcorr.h"
+#include "xcorr.cuh"
 
 // provide namespace shortcuts
 using std::cout;
 
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
-  char *fileIn = "check2.lvm"; // file name to load
-  char *pushFile =
+  const char *fileIn = "check2.lvm"; // file name to load
+  const char *pushFile =
       "processed_push.csv"; // file name to which we will write the "push" data
-  char *releaseFile = "processed_release.csv"; // file name to which we will
-                                               // write the "release" data
-  double **dataMatrix;
+  const char *releaseFile =
+      "processed_release.csv"; // file name to which we will
+                               // write the "release" data
+  float **dataMatrix;
 
   // number of fields (i.e. data columns) in the .lvm file
   int numFields = 0; // (set by readLVM)
@@ -38,16 +41,16 @@ int main(int argc, char *argv[]) {
   // number of samples (i.e. data rows) in the .lvm file (set by readLVM)
   int numSamples = 0;
 
-  int sampleFreq = 50000; // Hz
+  int sampleRate = 50000; // Hz
 
   // lower and upper cutoff for Butterworth bandpass
-  double filter[2] = {150, 5000}; // [Hz]
+  float filter[2] = {150, 5000}; // [Hz]
 
   // start and end of template window for xcorr
-  double window[2] = {0, 2}; // [ms]
+  float window[2] = {0, 2}; // [ms]
 
   // accelerometer spacing
-  double travelDist = 10; // [mm]
+  float travelDist = 10; // [mm]
 
   int i; // index variable
 
@@ -62,28 +65,29 @@ int main(int argc, char *argv[]) {
   dataMatrix = readLVM(fileIn, &numFields, &numSamples);
 
   // filter first accelerometer data
-  double *filteredAcc1; // cudaMallocManaged (no longer need cudaMallocManaged)
-  double *filteredAcc2; // cudaMallocManaged (no longer need cudaMallocManaged)
-  filtfilt(dataMatrix[1], filteredAcc1, numSamples, sampleFreq, filter[0],
-                          filter[1]); // filter acc1 data
-  filtfilt(dataMatrix[2], filteredAcc2, numSamples, sampleFreq, filter[0],
-                          filter[1]); // filter acc2 data
+  float *filteredAcc1, *filteredAcc2;
+  cudaMallocManaged((void **)&filteredAcc1, sizeof(float) * numSamples);
+  cudaMallocManaged((void **)&filteredAcc2, sizeof(float) * numSamples);
+
+  filtfilt(dataMatrix[1], filteredAcc1, numSamples, sampleRate, filter[0],
+           filter[1]); // filter acc1 data
+  filtfilt(dataMatrix[2], filteredAcc2, numSamples, sampleRate, filter[0],
+           filter[1]); // filter acc2 data
 
   /// sort the push and pull tap indices
-  int *pushPullIndices;
+  size_t *pushPullIndices;
   int nLead, nTrail;
-  size_t ind1, ind2;
 
   // returns indices of "push" (rising edges) and "release" (falling edges) in
   // array
   // values are ordered as follows: [push1, push2, ... pushN, release1,
   // release2, ... releaseN]
   pushPullIndices =
-      sort(dataMatrix[0], sampleFreq, numSamples, 100, &nLead, &nTrail);
+      sort(dataMatrix[0], sampleRate, numSamples, 100, &nLead, &nTrail);
 
   // compute wave speed
   bool whichFirst = 0;
-  double *push, *release;
+  float *push, *release;
   int nPush, nRelease;
 
   // determine which comes first: push or release. Also determine how many push
@@ -125,7 +129,8 @@ int main(int argc, char *argv[]) {
   } // if malloc based on relative push/release length
 
   push = new float[nPush]; //(float *)malloc(sizeof(double) * nPush); // c++ new
-  release = new float[nRelease]; //(float *)malloc(sizeof(double) * nRelease);  // c++ new
+  release = new float[nRelease]; //(float *)malloc(sizeof(double) * nRelease);
+                                 //// c++ new
 
   // set index arrays to larger needed size for push/release
   size_t nInds = (nRelease < nPush) ? nPush : nRelease;

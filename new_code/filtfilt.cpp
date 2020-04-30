@@ -7,14 +7,14 @@
 #include <cstddef>
 #include "filter.h"
 
-void filtfilt(double *unfiltered, double *filtered, int N, int fs, double low, double high){
-    double *temp1 = new double[N];
-    double *temp2 = new double[N];
+void filtfilt(float *unfiltered, float *filtered, int N, int fs, float low, float high){
+    float *temp1 = new double[N];
+    float *temp2 = new double[N];
     // Get the filter coefficients
-    double B[3];
-    double A[3];
-    double D[3];
-    double C[3];
+    float B[3];
+    float A[3];
+    float D[3];
+    float C[3];
     butterLP(high,fs,B,A); // the low-pass filter gets the "high" cutoff
     butterHP(low,fs,D,C); // the high-pass filter gets the "low" cutoff
 

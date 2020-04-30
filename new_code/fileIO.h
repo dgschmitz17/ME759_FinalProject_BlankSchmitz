@@ -5,10 +5,10 @@
 
 #include <cstdlib>
 
-double ** readLVM(char *filename,int *numRows,int *numCols);
+float ** readLVM(const char *filename,int *numRows,int *numCols);
 //double * readLVM(char *filename,int *numRows,int *numCols);
 
-void writeCSV(const char* filename, const double* data, size_t n_rows, size_t n_cols);
+void writeCSV(const char* filename, const float* data, size_t n_rows, size_t n_cols);
 
 void writeCSVInt(const char* filename, const int* data, size_t n_rows, size_t n_cols);
 

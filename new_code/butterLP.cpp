@@ -24,24 +24,24 @@ using std::cout;
 #define PI 3.1416
 #define complex _Complex
 
-void butterLP(int fc, int fs, double *B, double *A){
+void butterLP(int fc, int fs, float *B, float *A){
     int N = 2;
     if(fc >= fs/2){
         cout << "The low-pass cutoff frequency must be less than half the sample rate.";
         exit(100);
     }// check that cutoff is below half the sample frequency
 
-    double Fc = fs/PI * tan(PI*fc/fs); // continuous pre-warped frequency
-    double complex num;
-    double complex den;
+    float Fc = fs/PI * tan(PI*fc/fs); // continuous pre-warped frequency
+    float complex num;
+    float complex den;
 
     // I. Find the poles of the analog filter
-    double theta[2];
-    double pa_Re[2];
-    double pa_Im[2];
-    double complex p[2];
-    double b[3] = {1,2,1};
-    double K;
+    float theta[2];
+    float pa_Re[2];
+    float pa_Im[2];
+    float complex p[2];
+    float b[3] = {1,2,1};
+    float K;
 
     int i, k;
     for( k = 0 ; k < N ; k++ ){
@@ -61,7 +61,7 @@ void butterLP(int fc, int fs, double *B, double *A){
     }// end for, order of filter
 
     // convert poles and zeros to polynomial coefficients
-    double complex temp;
+    float complex temp;
     A[0] = 1;
     temp =  -(p[0] + p[1]);
     A[1] = creal(temp);

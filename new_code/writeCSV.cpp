@@ -9,7 +9,7 @@
 // Provide some namespace shortcuts
 using std::cout;
 
-void writeCSV(const char* filename, const double* data, size_t n_rows, size_t n_cols){
+void writeCSV(const char* filename, const float* data, size_t n_rows, size_t n_cols){
     FILE *fileOut = fopen(filename,"w"); // file name is passed as a function argument, open for write
     int i; // loop index variables
 

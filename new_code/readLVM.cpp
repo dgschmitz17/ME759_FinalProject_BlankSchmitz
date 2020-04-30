@@ -10,7 +10,7 @@
 // Provide some namespace shortcuts
 using std::cout;
 
-double ** readLVM(char *filename,int *numCols,int *numRows){
+float ** readLVM(char *filename,int *numCols,int *numRows){
 //int main(void){
     //FILE *fileIn  = fopen("check1.lvm", "r"); // read only
     FILE *fileIn = fopen(filename,"r"); // file name is passed as a function argument, open read only
@@ -55,10 +55,10 @@ double ** readLVM(char *filename,int *numCols,int *numRows){
     rewind(fileIn); // reset file pointer to the beginning of the file
 
     // allocate memory for output matrix
-    double **matrixOut = new double*[numDataCols];
+    float **matrixOut = new float*[numDataCols];
 
     for( i = 0 ; i < numDataCols ; i++ ){
-        matrixOut[i] = new double[numDataRows];
+        matrixOut[i] = new float[numDataRows];
     }// end for columns to allocate memory
 
     // read the file again, but this time parse each column into its own array
