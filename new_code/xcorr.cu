@@ -3,7 +3,10 @@
 
 #include <cstdlib>
 #include <cuda.h>
-#include <math.h>
+#include <cmath>
+#include <iostream>
+
+using std::cout;
 
 // Computes the cross-correlation of reference and template, storing the result
 // in r.
@@ -20,6 +23,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
   int bidx = blockIdx.x;
   int tidx = threadIdx.x;
   int tpb = blockDim.x;
+  int nbk = gridDim.x;
   int id = bidx * tpb + tidx;
 
   size_t nOps = (lenR - lenT + 1);
@@ -28,48 +32,19 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
   size_t n = nInst * nOps;
 
-  // split up the shared memory with pointers to the appropriate elements
-  /*
-  extern __shared__ float sm[];
-  float *image_shared = sm;
-  float *mask_shared = (float *)&image_shared[tpb + 2 * R];
-  float *output_shared = (float *)&mask_shared[2 * R + 1];
+  // if(id > 1199999 && id < 1200001)
+  if (id == 1200000)
+    printf("%d\n", n - 1200000);
 
-  if (id >= n) { // conditional for threads that do nothing
-    // do nothing
-  } else {
-    // load elements of image into image_shared
-    if (t == 0) { // first thread gets preceding elements
-      for (int u = 0; u <= R; u++) {
-        // make sure we aren't accessing image out-of-bounds
-        if ((id - (int)R + (int)u) >= 0) {
-          image_shared[u] = image[id - R + u];
-        } else {
-          image_shared[u] = 0.0; // zero padding at beginning
-        }
-      }
-    } else if (t == (tpb - 1) ||
-               id == (n - 1)) { // last thread gets succeeding elements
-      for (int u = 0; u <= R; u++) {
-        // make sure we aren't accessing image out-of-bounds
-        if ((id + (int)u) < n) {
-          image_shared[tpb + R - 1 + u] = image[id + u];
-        } else {
-          image_shared[tpb + R - 1 + u] = 0.0; // zero padding at end
-        }
-      }
-    } else { // all other threads just fetch their corresponding element
-      image_shared[R + t] = image[id];
-    } // end if..else if..else
+    if (id == 1200000)
+    printf("again\n");
 
-    // load elements of mask into mask_shared
-    if (t < (2 * R + 1)) {
-      mask_shared[t] = mask[t];
-    } // end if
-  }   // end if..else
+  if (id == n)
+    printf("n: %d\n",id);
 
-  __syncthreads(); // syncthreads out of branch to prevent hang
-  */
+  if (id == 0)
+    printf("total number of threads: %d\n", nbk * tpb);
+
   float mult, A2, B2;
   if (id >= n) { // conditional for threads that do nothing
     // do nothing
@@ -88,21 +63,22 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
     } // end for j
 
     r[id] = mult / sqrt(A2 * B2);
+
   } // end if..else
+
+  if (id == 1200000)
+    printf("1200000 r: %.2f\n", r[1200000]);
 
 } // end xcorr_kernel
 
-// Function computeWaveSpeed 
+// Function computeWaveSpeed
 __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
                                size_t *indZ, float *waveSpeed, size_t nInst,
                                float *window, int sampleRate,
                                float travelDist) {
-  //float **templ = new float *[nInst];  // MANAGED MEMORY cudaMallocManaged((void **)&A, sizeof(float) * n * n);
-  //float **ref = new float *[nInst];  // MANAGED MEMORY
-
   float **templ, **ref;
-  cudaMallocManaged((void **)&templ, sizeof(float*) * nInst);
-  cudaMallocManaged((void **)&ref, sizeof(float*) * nInst);
+  cudaMallocManaged((void **)&templ, sizeof(float *) * nInst);
+  cudaMallocManaged((void **)&ref, sizeof(float *) * nInst);
 
   float *rMax = new float[nInst];
   size_t *maxInd = new size_t[nInst];
@@ -111,7 +87,8 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
   float wo, theta, delta;
   int windowShift, k;
-  size_t templLength, refLength, temp;
+  size_t templLength, temp;
+  size_t refLength = 0;
 
   // determine the beginning index of the template according to the first
   // element of window (which is in milliseconds)
@@ -121,7 +98,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   templLength = (size_t)(sampleRate * (window[1] - window[0]) / 1000);
 
   // find template and reference for each instance
-  for (int inst = 0; inst < nInst; inst++) {
+  for (size_t inst = 0; inst < nInst; inst++) {
     // define the template as a segment of sig1 based on indA and the window
     templ[inst] = &sig1[indA[inst] + windowShift];
 
@@ -145,29 +122,32 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   float *r;
   cudaMallocManaged((void **)&r, sizeof(float) * nOps * nInst);
   size_t threads_per_block =
-      1024; // may need to change depending on shared memory size
+      512; // may need to change depending on shared memory size
   size_t number_of_blocks =
       ((nOps * nInst) + threads_per_block - 1) / threads_per_block;
-  size_t nInstPerBlock =
-      (threads_per_block / nOps) + (((threads_per_block % nOps) > 1) ? 2 : 1);
-  //size_t shared_memory_size =
-      //nInstPerBlock * (sizeof(float) * (refLength + templLength));
 
-  size_t shared_memory_size =
-      sizeof(float); // temporary until shared memory is implemented
+  for (size_t i = 0; i < (nOps * nInst); i++)
+    r[i] = 3;
 
-  normxcorr_kernel<<<number_of_blocks, threads_per_block, shared_memory_size>>>(
+  cout << "outside kernel, n = " << (nOps * nInst) << "\n";
+
+  normxcorr_kernel<<<number_of_blocks, threads_per_block>>>(
       templ, templLength, ref, refLength, r, nInst);
 
+  cudaDeviceSynchronize();
+
   // find the maximum correlation value
-  for (int inst = 0; inst < nInst; inst++) {
-    for (int i = 0; i < nOps; i++) {
-      int j = inst * nOps + i;
+  for (size_t inst = 0; inst < nInst; inst++) {
+    rMax[inst] = 0;
+    for (size_t i = 0; i < nOps; i++) {
+      size_t j = inst * nOps + i;
       if (r[j] > rMax[inst]) {
         rMax[inst] = r[j];
         maxInd[inst] = i;
       } // end if
     }   // end for each element
+
+    // cout << rMax[inst] << "\n";
 
     k = inst * nOps + maxInd[inst];
 
@@ -190,15 +170,66 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   } // end for each instance
 
   // clean up
-  delete[] templ;
-  delete[] ref;
+  cudaFree(r);
+  cudaFree(ref);
+  cudaFree(templ);
+
   delete[] rMax;
   delete[] maxInd;
   delete[] frameDelay;
   delete[] timeDelay;
 
-  cudaFree(ref);
-  cudaFree(templ);
-  cudaFree(r);
-
 } // end computeTimeDelay
+
+/*
+size_t nInstPerBlock =
+  (threads_per_block / nOps) + (((threads_per_block % nOps) > 1) ? 2 : 1);
+size_t shared_memory_size =
+  nInstPerBlock * (sizeof(float) * (refLength + templLength));
+
+  normxcorr_kernel<<<number_of_blocks, threads_per_block, shared_memory_size>>>(
+      templ, templLength, ref, refLength, r, nInst);
+      */
+
+// split up the shared memory with pointers to the appropriate elements
+/*
+extern __shared__ float sm[];
+float *image_shared = sm;
+float *mask_shared = (float *)&image_shared[tpb + 2 * R];
+float *output_shared = (float *)&mask_shared[2 * R + 1];
+
+if (id >= n) { // conditional for threads that do nothing
+  // do nothing
+} else {
+  // load elements of image into image_shared
+  if (t == 0) { // first thread gets preceding elements
+    for (int u = 0; u <= R; u++) {
+      // make sure we aren't accessing image out-of-bounds
+      if ((id - (int)R + (int)u) >= 0) {
+        image_shared[u] = image[id - R + u];
+      } else {
+        image_shared[u] = 0.0; // zero padding at beginning
+      }
+    }
+  } else if (t == (tpb - 1) ||
+             id == (n - 1)) { // last thread gets succeeding elements
+    for (int u = 0; u <= R; u++) {
+      // make sure we aren't accessing image out-of-bounds
+      if ((id + (int)u) < n) {
+        image_shared[tpb + R - 1 + u] = image[id + u];
+      } else {
+        image_shared[tpb + R - 1 + u] = 0.0; // zero padding at end
+      }
+    }
+  } else { // all other threads just fetch their corresponding element
+    image_shared[R + t] = image[id];
+  } // end if..else if..else
+
+  // load elements of mask into mask_shared
+  if (t < (2 * R + 1)) {
+    mask_shared[t] = mask[t];
+  } // end if
+}   // end if..else
+
+__syncthreads(); // syncthreads out of branch to prevent hang
+*/

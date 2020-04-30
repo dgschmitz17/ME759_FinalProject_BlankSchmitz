@@ -25,8 +25,8 @@ void writeCSV(const char* filename, const float* data, size_t n_rows, size_t n_c
     */
    
     for(i = 0 ; i < n_rows ; i++){
-        cout << fileOut;
-        cout << data[i] << "\n";
+        //cout << fileOut;
+        //cout << data[i] << "\n";
         if(i < n_rows){fputs("\n",fileOut);}
     }//end for
 

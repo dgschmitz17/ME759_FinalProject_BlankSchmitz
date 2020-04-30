@@ -11,7 +11,7 @@
 // Provide some namespace shortcuts
 using std::cout;
 
-float ** readLVM(char *filename,int *numCols,int *numRows){
+float ** readLVM(const char *filename,int *numCols,int *numRows){
 //int main(void){
     //FILE *fileIn  = fopen("check1.lvm", "r"); // read only
     FILE *fileIn = fopen(filename,"r"); // file name is passed as a function argument, open read only

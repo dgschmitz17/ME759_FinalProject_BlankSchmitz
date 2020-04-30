@@ -28,11 +28,13 @@ using std::cout;
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
   const char *fileIn = "check2.lvm"; // file name to load
+  /*
   const char *pushFile =
       "processed_push.csv"; // file name to which we will write the "push" data
   const char *releaseFile =
       "processed_release.csv"; // file name to which we will
                                // write the "release" data
+                               */
   float **dataMatrix;
 
   // number of fields (i.e. data columns) in the .lvm file
@@ -153,20 +155,21 @@ int main(int argc, char *argv[]) {
 
   computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, push, nPush, window,
                    sampleRate, travelDist);
-
-  // RELEASE
-  for (i = 0; i < nRelease; i++) {
-    if (!whichFirst) {
-      ind1[i] = pushPullIndices[nPush + i];
-      ind2[i] = pushPullIndices[i + 1];
-    } else {
-      ind1[i] = pushPullIndices[nPush + i];
-      ind2[i] = pushPullIndices[i];
-    } // end conditional whichFirst
-  }   // end for each release
-  computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release, nRelease,
-                   window, sampleRate, travelDist);
-
+  /*
+      // RELEASE
+      for (i = 0; i < nRelease; i++) {
+        if (!whichFirst) {
+          ind1[i] = pushPullIndices[nPush + i];
+          ind2[i] = pushPullIndices[i + 1];
+        } else {
+          ind1[i] = pushPullIndices[nPush + i];
+          ind2[i] = pushPullIndices[i];
+        } // end conditional whichFirst
+      }   // end for each release
+      computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release,
+     nRelease,
+                       window, sampleRate, travelDist);
+*/
   // ----- timing -----
   // stop the event and get the elapsed time
   cudaEventRecord(stop);
@@ -176,8 +179,8 @@ int main(int argc, char *argv[]) {
   std::cout << elapsedTime << "\n";
   // ----- timing -----
 
-  writeCSV(pushFile, push, nPush, 1);          // write out push data
-  writeCSV(releaseFile, release, nRelease, 1); // write out release data
+  //writeCSV(pushFile, push, nPush, 1);          // write out push data
+  //writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory
   delete[] dataMatrix;
