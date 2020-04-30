@@ -14,7 +14,7 @@ int max_jon(const float *arr, size_t size) {
   // initialize the max
   int max = 0;
   // find the maximum value in the array
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     if (arr[i] > arr[max]) {
       max = i;
     }
@@ -32,7 +32,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   float *signal = new float[n];
 
   // get rid of aberrant negative values
-  for (int i = 1; i < n - 1; i++) {
+  for (size_t i = 1; i < n - 1; i++) {
     if (signalRef[i] < 0) {
       signal[i] = (signalRef[i - 1] + signalRef[i + 1]) / 2;
     }
@@ -52,7 +52,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   int k = 0;
   int flag = 0;
   float thresh = signalRef[max_jon(signalRef, n)] / 2;
-  for (int i = 0; i < n - 1; i++) {
+  for (size_t i = 0; i < n - 1; i++) {
     // store the extended and retracted tapper data
     if (signalRef[i] > thresh) {
       extended[i] = 1;
@@ -63,7 +63,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
       retracted[i] = 1;
     }
   }
-  for (int i = 0; i < n - 1; i++) {
+  for (size_t i = 0; i < n - 1; i++) {
     if (i < n - 1) {
       // store the leading and trailing indices
       if ((extended[i + 1] - extended[i]) > 0) {
@@ -90,7 +90,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   // dynamically allocate memory to store leading and trailing indices
   int nLeading = 0;
   int nTrailing = 0;
-  for (int i = 0; i < nTaps / 2; i++) {
+  for (size_t i = 0; i < nTaps / 2; i++) {
     if (&leading[i] != NULL) {
       nLeading++;
     }

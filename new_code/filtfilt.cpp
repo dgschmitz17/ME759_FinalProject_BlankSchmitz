@@ -8,8 +8,8 @@
 #include "filter.h"
 
 void filtfilt(float *unfiltered, float *filtered, int N, int fs, float low, float high){
-    float *temp1 = new double[N];
-    float *temp2 = new double[N];
+    float *temp1 = new float[N];
+    float *temp2 = new float[N];
     // Get the filter coefficients
     float B[3];
     float A[3];

@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cuda.h>
+#include <math.h>
 
 // Computes the cross-correlation of reference and template, storing the result
 // in r.
@@ -69,7 +70,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
   __syncthreads(); // syncthreads out of branch to prevent hang
   */
-
+  float mult, A2, B2;
   if (id >= n) { // conditional for threads that do nothing
     // do nothing
   } else {
@@ -80,7 +81,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
     A2 = 0;
     B2 = 0;
 
-    for (j = 0; j < lenT; j++) {
+    for (size_t j = 0; j < lenT; j++) {
       mult += my_templ[j] * my_ref[j];
       A2 += my_templ[j] * my_templ[j];
       B2 += my_ref[j] * my_ref[j];
@@ -100,11 +101,11 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   //float **ref = new float *[nInst];  // MANAGED MEMORY
 
   float **templ, **ref;
-  cudaMallocManaged((void **)&templ, sizeof(float) * nInst);
-  cudaMallocManaged((void **)&ref, sizeof(float) * nInst);
+  cudaMallocManaged((void **)&templ, sizeof(float*) * nInst);
+  cudaMallocManaged((void **)&ref, sizeof(float*) * nInst);
 
   float *rMax = new float[nInst];
-  size_t *maxInd = new float[nInst];
+  size_t *maxInd = new size_t[nInst];
   int *frameDelay = new int[nInst];
   float *timeDelay = new float[nInst];
 
@@ -133,27 +134,28 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
     // define the reference as a segment of sig2 starting at the same index as
     // templ
-    ref[i] = &sig2[indA[inst] + windowShift];
+    ref[inst] = &sig2[indA[inst] + windowShift];
   } // end for
 
   // determine shared memory size
   size_t nOps = refLength - templLength + 1;
-  size_t nInstPerBlock =
-      (threads_per_block / nOps) + (((threads_per_block % nOps) > 1) ? 2 : 1);
-  size_t shared_memory_size =
-      nInstPerBlock * (sizeof(float) * (refLength + templLength));
-
-  size_t shared_memory_size =
-      sizeof(float); // temporary until shared memory is implemented
 
   // perform the cross-correlation between the template and reference signals
   // float *r = new float[nOps * nInst]; // MANAGED MEMORY
   float *r;
-  cudaMallocManaged((void *)&r, sizeof(float) * nOps * nInst);
+  cudaMallocManaged((void **)&r, sizeof(float) * nOps * nInst);
   size_t threads_per_block =
       1024; // may need to change depending on shared memory size
   size_t number_of_blocks =
       ((nOps * nInst) + threads_per_block - 1) / threads_per_block;
+  size_t nInstPerBlock =
+      (threads_per_block / nOps) + (((threads_per_block % nOps) > 1) ? 2 : 1);
+  //size_t shared_memory_size =
+      //nInstPerBlock * (sizeof(float) * (refLength + templLength));
+
+  size_t shared_memory_size =
+      sizeof(float); // temporary until shared memory is implemented
+
   normxcorr_kernel<<<number_of_blocks, threads_per_block, shared_memory_size>>>(
       templ, templLength, ref, refLength, r, nInst);
 

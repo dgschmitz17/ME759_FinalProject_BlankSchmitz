@@ -157,11 +157,11 @@ int main(int argc, char *argv[]) {
   // RELEASE
   for (i = 0; i < nRelease; i++) {
     if (!whichFirst) {
-      ind1 = pushPullIndices[nPush + i];
-      ind2 = pushPullIndices[i + 1];
+      ind1[i] = pushPullIndices[nPush + i];
+      ind2[i] = pushPullIndices[i + 1];
     } else {
-      ind1 = pushPullIndices[nPush + i];
-      ind2 = pushPullIndices[i];
+      ind1[i] = pushPullIndices[nPush + i];
+      ind2[i] = pushPullIndices[i];
     } // end conditional whichFirst
   }   // end for each release
   computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release, nRelease,

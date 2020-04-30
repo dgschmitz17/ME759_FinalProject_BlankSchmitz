@@ -3,6 +3,7 @@
  */
 
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <iostream>
 #include <cstddef>
@@ -26,7 +27,7 @@ float ** readLVM(char *filename,int *numCols,int *numRows){
     int colIndex;
 
     char *ptr; // pointer used by strtok to split the data buffer
-    char *tok = "\t"; // .lvm files are tab delimited
+    const char *tok = "\t"; // .lvm files are tab delimited
 
     int i; // index variable
            

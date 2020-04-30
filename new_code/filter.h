@@ -3,6 +3,6 @@
 
 void butterLP(int fc, int fs, float *B, float *A);
 void butterHP(int fc, int fs, float *B, float *A);
-double *filtfilt(float *unfiltered, float *filtered, int N, int fs, float low, float high);
+void filtfilt(float *unfiltered, float *filtered, int N, int fs, float low, float high);
 
 #endif
