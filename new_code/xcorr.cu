@@ -96,11 +96,12 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
                                size_t *indZ, float *waveSpeed, size_t nInst,
                                float *window, int sampleRate,
                                float travelDist) {
-  float **templ = new float *[nInst];  // MANAGED MEMORY cudaMallocManaged((void **)&A, sizeof(float) * n * n);
-  float **ref = new float *[nInst];  // MANAGED MEMORY
+  //float **templ = new float *[nInst];  // MANAGED MEMORY cudaMallocManaged((void **)&A, sizeof(float) * n * n);
+  //float **ref = new float *[nInst];  // MANAGED MEMORY
 
-  cudaMallocManaged((void **)&templ, sizeof(float) * n * n);
-  cudaMallocManaged((void **)&ref, sizeof(float) * n * n);
+  float **templ, **ref;
+  cudaMallocManaged((void **)&templ, sizeof(float) * nInst);
+  cudaMallocManaged((void **)&ref, sizeof(float) * nInst);
 
   float *rMax = new float[nInst];
   size_t *maxInd = new float[nInst];
@@ -146,7 +147,9 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       sizeof(float); // temporary until shared memory is implemented
 
   // perform the cross-correlation between the template and reference signals
-  float *r = new float[nOps * nInst]; // MANAGED MEMORY
+  // float *r = new float[nOps * nInst]; // MANAGED MEMORY
+  float *r;
+  cudaMallocManaged((void *)&r, sizeof(float) * nOps * nInst);
   size_t threads_per_block =
       1024; // may need to change depending on shared memory size
   size_t number_of_blocks =

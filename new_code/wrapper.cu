@@ -4,15 +4,14 @@
  * Function calls: 
  *
  * Compile command: nvcc [FILENAMES HERE] -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -o wrapper
+ *
+ * Compile command: nvcc wrapper.cu xcorr.cu filt.cpp butterLP.cpp butterHP.cpp readLVM.cpp sort.cpp -Xcompiler -O3 -Xcompiler -Wall -Xptxas -O3 -o wrapper
  */
 
 // ----- LIBRARIES ----- //
 #include <cstdlib>
 #include <cstdbool>
 #include <iostream>
-#include <chrono>
-#include <ratio>
-#include <cmath>
 #include <cstddef>
 #include <cuda.h>
 
@@ -21,10 +20,8 @@
 #include "sort.h"
 #include "xcorr.h"
 
-// Provide some namespace shortcuts
+// provide namespace shortcuts
 using std::cout;
-using std::chrono::high_resolution_clock;
-using std::chrono::duration;
 
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
@@ -55,16 +52,18 @@ int main(int argc, char *argv[]) {
   int i; // index variable
 
   // ----- timing -----
-  high_resolution_clock::time_point start;
-  start = high_resolution_clock::now();
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start);
   // ----- timing -----
 
   // call readLVM to load data into a matrix
   dataMatrix = readLVM(fileIn, &numFields, &numSamples);
 
   // filter first accelerometer data
-  double *filteredAcc1; // cudaMallocManaged
-  double *filteredAcc2; // cudaMallocManaged
+  double *filteredAcc1; // cudaMallocManaged (no longer need cudaMallocManaged)
+  double *filteredAcc2; // cudaMallocManaged (no longer need cudaMallocManaged)
   filtfilt(dataMatrix[1], filteredAcc1, numSamples, sampleFreq, filter[0],
                           filter[1]); // filter acc1 data
   filtfilt(dataMatrix[2], filteredAcc2, numSamples, sampleFreq, filter[0],
@@ -125,8 +124,8 @@ int main(int argc, char *argv[]) {
     }
   } // if malloc based on relative push/release length
 
-  push = (float *)malloc(sizeof(double) * nPush); // c++ new
-  release = (float *)malloc(sizeof(double) * nRelease);  // c++ new
+  push = new float[nPush]; //(float *)malloc(sizeof(double) * nPush); // c++ new
+  release = new float[nRelease]; //(float *)malloc(sizeof(double) * nRelease);  // c++ new
 
   // set index arrays to larger needed size for push/release
   size_t nInds = (nRelease < nPush) ? nPush : nRelease;
@@ -164,25 +163,24 @@ int main(int argc, char *argv[]) {
                    window, sampleRate, travelDist);
 
   // ----- timing -----
-  high_resolution_clock::time_point end;
-  duration<double, std::milli> duration_sec;
-  end = high_resolution_clock::now();
-  duration_sec =
-      std::chrono::duration_cast<duration<double, std::milli>>(end - start);
-  cout << "Execution time: " << duration_sec.count() << " ms\n";
+  // stop the event and get the elapsed time
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+  float elapsedTime;
+  cudaEventElapsedTime(&elapsedTime, start, stop);
+  std::cout << elapsedTime << "\n";
   // ----- timing -----
 
   writeCSV(pushFile, push, nPush, 1);          // write out push data
   writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory
-  free(dataMatrix);
-  free(filteredAcc1);
-  free(pushPullIndices);
-  free(push);
-  free(release);
-  free(ind1);
-  free(ind2);
+  delete[] dataMatrix;
+  delete[] pushPullIndices;
+  delete[] push;
+  delete[] release;
+  delete[] ind1;
+  delete[] ind2;
 
   cudaFree(filteredAcc1);
   cudaFree(filteredAcc2);
