@@ -28,9 +28,9 @@ using std::cout;
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
   const char *fileIn = "check2.lvm"; // file name to load
-  /*
   const char *pushFile =
       "processed_push.csv"; // file name to which we will write the "push" data
+      /*
   const char *releaseFile =
       "processed_release.csv"; // file name to which we will
                                // write the "release" data
@@ -95,6 +95,9 @@ int main(int argc, char *argv[]) {
   // determine which comes first: push or release. Also determine how many push
   // and release events we can use
 
+  cout << "nLead: " << nLead << "\n";
+  cout << "nTrail: " << nTrail << "\n";
+
   // ------------------ PUSH ............ PUSH ------------------
   if (nLead > nTrail) { // push starts and ends, so throw away last push index,
                         // both push and release have length nTrail
@@ -130,9 +133,8 @@ int main(int argc, char *argv[]) {
     }
   } // if malloc based on relative push/release length
 
-  push = new float[nPush]; //(float *)malloc(sizeof(double) * nPush); // c++ new
-  release = new float[nRelease]; //(float *)malloc(sizeof(double) * nRelease);
-                                 //// c++ new
+  push = new float[nPush];
+  release = new float[nRelease];
 
   // set index arrays to larger needed size for push/release
   size_t nInds = (nRelease < nPush) ? nPush : nRelease;
@@ -151,36 +153,44 @@ int main(int argc, char *argv[]) {
       ind1[i] = pushPullIndices[i];
       ind2[i] = pushPullIndices[nPush + i + 1];
     } // end conditional whichFirst
-  }   // end for each push
+
+    // cout << "ind1[i]: " << ind1[i] << "\n";
+    // cout << "ind2[i]: " << ind2[i] << "\n";
+  } // end for each push
+
+  nPush = nPush - 1;
+  nRelease = nRelease - 1;
 
   computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, push, nPush, window,
                    sampleRate, travelDist);
-  /*
-      // RELEASE
-      for (i = 0; i < nRelease; i++) {
-        if (!whichFirst) {
-          ind1[i] = pushPullIndices[nPush + i];
-          ind2[i] = pushPullIndices[i + 1];
-        } else {
-          ind1[i] = pushPullIndices[nPush + i];
-          ind2[i] = pushPullIndices[i];
-        } // end conditional whichFirst
-      }   // end for each release
-      computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release,
-     nRelease,
-                       window, sampleRate, travelDist);
-*/
+/*
+  // RELEASE
+  for (i = 0; i < nRelease; i++) {
+    if (!whichFirst) {
+      ind1[i] = pushPullIndices[nPush + i];
+      ind2[i] = pushPullIndices[i + 1];
+    } else {
+      ind1[i] = pushPullIndices[nPush + i];
+      ind2[i] = pushPullIndices[i];
+    } // end conditional whichFirst
+  }   // end for each release
+  computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release, nRelease,
+                   window, sampleRate, travelDist);
+                   */
+
   // ----- timing -----
   // stop the event and get the elapsed time
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
   float elapsedTime;
   cudaEventElapsedTime(&elapsedTime, start, stop);
-  std::cout << elapsedTime << "\n";
+  std::cout << "Elapsed Time: " << elapsedTime << "\n";
   // ----- timing -----
 
-  //writeCSV(pushFile, push, nPush, 1);          // write out push data
-  //writeCSV(releaseFile, release, nRelease, 1); // write out release data
+  //cout << "push[0]: " << push[0] << "\n";
+
+  writeCSV(pushFile, push, nPush, 1);          // write out push data
+  // writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory
   delete[] dataMatrix;

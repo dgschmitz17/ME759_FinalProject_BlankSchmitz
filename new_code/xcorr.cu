@@ -32,18 +32,20 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
   size_t n = nInst * nOps;
 
-  // if(id > 1199999 && id < 1200001)
-  if (id == 1200000)
-    printf("%d\n", n - 1200000);
-
-    if (id == 1200000)
-    printf("again\n");
-
-  if (id == n)
-    printf("n: %d\n",id);
-
-  if (id == 0)
-    printf("total number of threads: %d\n", nbk * tpb);
+  /*
+  if (id == n - 1) {
+    printf("bidx: %d\n", bidx);
+    printf("tidx: %d\n", tidx);
+    printf("tpb: %d\n", tpb);
+    printf("nbk: %d\n", nbk);
+    printf("id: %d\n", id);
+    printf("nOps: %d\n", nOps);
+    printf("rInst: %d\n", rInst);
+    printf("rOp: %d\n", rOp);
+    printf("n: %d\n", n);
+    printf("r[id]: %.1f\n", r[id]);
+  } // end if
+  */
 
   float mult, A2, B2;
   if (id >= n) { // conditional for threads that do nothing
@@ -64,10 +66,10 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
     r[id] = mult / sqrt(A2 * B2);
 
-  } // end if..else
+    // if (id == n-1)
+    //  printf("r[end]: %f\n", r[id]);
 
-  if (id == 1200000)
-    printf("1200000 r: %.2f\n", r[1200000]);
+  } // end if..else
 
 } // end xcorr_kernel
 
@@ -129,8 +131,6 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   for (size_t i = 0; i < (nOps * nInst); i++)
     r[i] = 3;
 
-  cout << "outside kernel, n = " << (nOps * nInst) << "\n";
-
   normxcorr_kernel<<<number_of_blocks, threads_per_block>>>(
       templ, templLength, ref, refLength, r, nInst);
 
@@ -163,8 +163,8 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
     } // end if/else
 
     // compute time lag based on frame lag
-    timeDelay[inst] =
-        (frameDelay[inst] / sampleRate) * 1000; // time delay in milliseconds
+    timeDelay[inst] = (((float)frameDelay[inst]) / sampleRate) *
+                      1000; // time delay in milliseconds
 
     waveSpeed[inst] = travelDist / timeDelay[inst];
   } // end for each instance
