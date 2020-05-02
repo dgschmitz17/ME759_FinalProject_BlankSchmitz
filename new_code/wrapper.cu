@@ -115,8 +115,8 @@ const char *releaseFile =
   // determine which comes first: push or release. Also determine how many push
   // and release events we can use
 
-  cout << "nLead: " << nLead << "\n";
-  cout << "nTrail: " << nTrail << "\n";
+  //cout << "nLead: " << nLead << "\n";
+  //cout << "nTrail: " << nTrail << "\n";
 
   // ------------------ PUSH ............ PUSH ------------------
   if (nLead > nTrail) { // push starts and ends, so throw away last push index,
@@ -209,7 +209,7 @@ const char *releaseFile =
 
   // cout << "push[0]: " << push[0] << "\n";
 
-  //writeCSV(pushFile, push, nPush, 1); // write out push data
+  writeCSV(pushFile, push, nPush, 1); // write out push data
   // writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory

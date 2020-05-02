@@ -30,7 +30,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
 
   size_t nOps = (lenR - lenT + 1);
   size_t rInst = id / nOps;
-  size_t rOp = tidx % nOps;
+  size_t rOp = id % nOps;
 
   size_t n = nInst * nOps;
 
@@ -86,7 +86,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
   float *rMax = new float[nInst];
   size_t *maxInd = new size_t[nInst];
-  int *frameDelay = new int[nInst];
+  float *frameDelay = new float[nInst];
   float *timeDelay = new float[nInst];
 
   float wo, theta, delta;
@@ -138,8 +138,8 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
   cudaDeviceSynchronize();
 
-  const char *rFile = "r_vals.csv";
-  writeCSV(rFile, r, (nOps * nInst), 1); // write out push data
+  // const char *rFile = "r_vals.csv";
+  // writeCSV(rFile, r, (nOps * nInst), 1); // write out push data
 
   // find the maximum correlation value
   for (size_t inst = 0; inst < nInst; inst++) {
@@ -163,13 +163,13 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       theta = atan((r[k - 1] - r[k + 1]) / (2 * r[k] * sin(wo)));
       delta = -theta / wo;
       frameDelay[inst] = maxInd[inst] - 1 + delta;
+      cout << inst << " delta is " << delta << "\n";
     } else {
       frameDelay[inst] = maxInd[inst] - 1;
     } // end if/else
 
-    // compute time lag based on frame lag
-    timeDelay[inst] = (((float)frameDelay[inst]) / sampleRate) *
-                      1000; // time delay in milliseconds
+    // compute time lag based on frame lag in ms
+    timeDelay[inst] = (((float)frameDelay[inst]) / sampleRate) * 1000;
 
     waveSpeed[inst] = travelDist / timeDelay[inst];
   } // end for each instance

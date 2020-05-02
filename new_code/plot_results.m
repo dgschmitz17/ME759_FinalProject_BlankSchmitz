@@ -1,5 +1,6 @@
 % waveSpeedCalcGit wrapper for test data generation
 %Process wave speed
+opengl software
 clear; clc; close all;
 
 %% Load file(s)
