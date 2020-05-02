@@ -8,14 +8,24 @@
 #include <cstddef>
 #include <fstream>
 #include <string>
+#include <bits/stdc++.h>
 
 // Provide some namespace shortcuts
 using namespace std;
+using std::strcpy;
 using std::cout;
 
 float **readLVM(const char *filename, int *numCols, int *numRows) {
-  string line;
-  ifstream fileIn(filename);
+  string line;               // string for getline()
+  char buf[100];             // buffer for tokenizing
+  ifstream fileIn(filename); // open input file
+
+  // make sure the file exists
+  if (!fileIn.is_open()) {
+    cout << "Error! Could not open file."
+         << "\n";
+    exit(-1);
+  } // end if fileIn doesn't exist
 
   // .lvm files have 23 lines of non-data text at the top
   int numHeadRows = 23;
@@ -39,25 +49,18 @@ float **readLVM(const char *filename, int *numCols, int *numRows) {
 
   int i; // index variable
 
-  // make sure the file exists
-  if (!fileIn.is_open()) {
-    cout << "Error! Could not open file."
-         << "\n";
-    exit(-1);
-  } // end if fileIn doesn't exist
-
   // count the number of rows and columns in the file
   while (getline(fileIn, line)) {
     numFileRows++; // count number of rows in the file
+    strcpy(buf, line.c_str());
 
     // use strtok to count the number of data columns
     if (numFileRows == 24) {
-      ptr = strtok(line, tok); // begin tokenizing the buffer
+      ptr = strtok(buf, tok); // begin tokenizing the buffer
 
       // as long as the pointer doesn't hit the end of the buffer
       while (ptr != NULL) {
         numDataCols++;
-
         // move the pointer to the next token in the buffer
         ptr = strtok(NULL, tok);
       } // end while
@@ -68,7 +71,10 @@ float **readLVM(const char *filename, int *numCols, int *numRows) {
   numDataRows = numFileRows - numHeadRows - numEofReturns;
   *numRows = numDataRows; // pass back the number of rows (samples)
   *numCols = numDataCols; // pass back the number of columns (fields)
-  rewind(fileIn);         // reset file pointer to the beginning of the file
+
+  // reset file pointer to the beginning of the file
+  fileIn.clear();
+  fileIn.seekg(0);
 
   // allocate memory for output matrix
   float **matrixOut = new float *[numDataCols];
@@ -80,16 +86,19 @@ float **readLVM(const char *filename, int *numCols, int *numRows) {
   // read the file again, but this time parse each column into its own array
   for (i = 0; i < (numFileRows - numEofReturns); i++) {
     getline(fileIn, line);
+    strcpy(buf, line.c_str());
+
     if (i >= numHeadRows) { // parsing only happens on data rows
       // parse data row into fields based on columns, tab separated
-      ptr = strtok(line, tok); // begin tokenizing the buffer
+      ptr = strtok(buf, tok); // begin tokenizing the buffer
 
       colIndex = 0;
-      while (ptr !=
-             NULL) { // as long as the pointer doesn't hit the end of the buffer
+      // as long as the pointer doesn't hit the end of the buffer
+      while (ptr != NULL) {
         matrixOut[colIndex % numDataCols][rowIndex] = atof(ptr);
-        ptr = strtok(NULL,
-                     tok); // move the pointer to the next token in the buffer
+
+        // move the pointer to the next token in the buffer
+        ptr = strtok(NULL, tok);
         colIndex++;
       } // end while
 

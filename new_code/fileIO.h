@@ -10,6 +10,6 @@ float ** readLVM(const char *filename,int *numRows,int *numCols);
 
 void writeCSV(const char* filename, const float* data, size_t n_rows, size_t n_cols);
 
-void writeCSVInt(const char* filename, const int* data, size_t n_rows, size_t n_cols);
+void writeCSVInt(const char* filename, const size_t* data, size_t n_rows, size_t n_cols);
 
 #endif

@@ -60,3 +60,30 @@ plot(timeVect,data.processedData.waveSpeed.unfilt.push{1,1},'r');
 legend('C, push','Matlab, push');
 xlabel('Time [s]');
 ylabel('Wave Speed [m/s]');
+
+return
+%% Load extra data
+filteredAcc1 = csvread('filtered_acc1.csv');
+filteredAcc2 = csvread('filtered_acc2.csv');
+pushPullIndices = csvread('push_pull_indices.csv');
+pushIndices = pushPullIndices(1:3001);
+pullIndices = pushPullIndices(3002:end);
+
+zpush = zeros(1,length(pushIndices));
+zpull = zeros(1,length(pullIndices));
+
+zlead = zeros(1,length(data.params.tapTiming.leading));
+ztrail = zeros(1,length(data.params.tapTiming.trailing));
+
+%% Extra plot(s)
+figure
+plot(data.rawData.lvm.wave(:,1),'b');
+hold on;
+plot(data.rawData.lvm.wave(:,2),'r');
+plot(filteredAcc1,'b--');
+plot(filteredAcc2,'r--');
+
+plot(data.params.tapTiming.leading,zlead,'gx','markersize',7,'linewidth',1.5);
+plot(data.params.tapTiming.trailing,ztrail,'go','markersize',7,'linewidth',1.5);
+plot(pushIndices,zpush,'kx','markersize',5,'linewidth',1.5);
+plot(pullIndices,zpull,'ko','markersize',5,'linewidth',1.5);

@@ -26,7 +26,7 @@ int max_jon(const float *arr, size_t size) {
 // and returns
 // the correlation coefficient and time delay
 size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
-             int *lead, int *trail) {
+             size_t *lead, size_t *trail) {
 
   // initialize the new tap signal
   float *signal = new float[n];

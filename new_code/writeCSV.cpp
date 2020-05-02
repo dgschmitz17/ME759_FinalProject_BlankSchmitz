@@ -11,7 +11,6 @@
 using namespace std;
 
 void writeCSV(const char* filename, const float* data, size_t n_rows, size_t n_cols){
-    //FILE *fileOut = fopen(filename,"w"); // file name is passed as a function argument, open for write
     ofstream fileOut (filename);
    
     for(size_t i = 0 ; i < n_rows ; i++){

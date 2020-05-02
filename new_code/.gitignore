@@ -1,2 +1,3 @@
-processed_push.csv
-processed_release.csv
+*.csv
+*.asv
+*.mat
