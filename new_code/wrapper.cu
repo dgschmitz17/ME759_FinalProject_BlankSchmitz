@@ -209,7 +209,7 @@ const char *releaseFile =
 
   // cout << "push[0]: " << push[0] << "\n";
 
-  writeCSV(pushFile, push, nPush, 1); // write out push data
+  //writeCSV(pushFile, push, nPush, 1); // write out push data
   // writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory

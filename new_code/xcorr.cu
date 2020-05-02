@@ -2,9 +2,11 @@
 // Authors: Jonathon Blank and Dylan Schmitz
 
 #include <cstdlib>
+#include <cstddef>
 #include <cuda.h>
 #include <cmath>
 #include <iostream>
+#include "fileIO.h"
 
 using std::cout;
 
@@ -135,6 +137,9 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       templ, templLength, ref, refLength, r, nInst);
 
   cudaDeviceSynchronize();
+
+  const char *rFile = "r_vals.csv";
+  writeCSV(rFile, r, (nOps * nInst), 1); // write out push data
 
   // find the maximum correlation value
   for (size_t inst = 0; inst < nInst; inst++) {

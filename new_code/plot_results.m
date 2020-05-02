@@ -63,9 +63,13 @@ ylabel('Wave Speed [m/s]');
 
 return
 %% Load extra data
+clear filteredAcc1 filteredAcc2 pushPullIndices rvals pushIndices...
+    pullIndices zpush zpull zlead ztrail rvals_parsed
 filteredAcc1 = csvread('filtered_acc1.csv');
 filteredAcc2 = csvread('filtered_acc2.csv');
 pushPullIndices = csvread('push_pull_indices.csv');
+rvals = csvread('r_vals.csv');
+
 pushIndices = pushPullIndices(1:3001);
 pullIndices = pushPullIndices(3002:end);
 
@@ -75,11 +79,17 @@ zpull = zeros(1,length(pullIndices));
 zlead = zeros(1,length(data.params.tapTiming.leading));
 ztrail = zeros(1,length(data.params.tapTiming.trailing));
 
+for ii = 1:length(pushIndices)-1
+    rvals_parsed(:,ii) = rvals(((ii-1)*400)+1:(ii*400));
+end
+
 %% Extra plot(s)
+close all;
+
 figure
-plot(data.rawData.lvm.wave(:,1),'b');
+% plot(data.rawData.lvm.wave(:,1),'b');
 hold on;
-plot(data.rawData.lvm.wave(:,2),'r');
+% plot(data.rawData.lvm.wave(:,2),'r');
 plot(filteredAcc1,'b--');
 plot(filteredAcc2,'r--');
 
@@ -87,3 +97,20 @@ plot(data.params.tapTiming.leading,zlead,'gx','markersize',7,'linewidth',1.5);
 plot(data.params.tapTiming.trailing,ztrail,'go','markersize',7,'linewidth',1.5);
 plot(pushIndices,zpush,'kx','markersize',5,'linewidth',1.5);
 plot(pullIndices,zpull,'ko','markersize',5,'linewidth',1.5);
+
+for ii = 1:size(rvals_parsed,2)
+    plot(pushIndices(ii):1:pushIndices(ii)+399,rvals_parsed(:,ii),...
+        'color',[1,0.5,0]);
+end
+
+for ii = 1:size(rvals_parsed,2)
+    jack_rs = data.params.waveCorrelation.rVals(:,:,ii);
+    jack_rs = jack_rs{1};
+    ljack = length(jack_rs);
+    plot(pushIndices(ii):1:pushIndices(ii)+ljack-1,jack_rs,...
+        'color',[0.5,1,0]);
+end
+
+
+figure
+plot(rvals_parsed);
