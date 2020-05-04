@@ -35,13 +35,18 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   for (size_t i = 1; i < n - 1; i++) {
     if (signalRef[i] < 0) {
       signal[i] = (signalRef[i - 1] + signalRef[i + 1]) / 2;
+    } else {
+      signal[i] = signalRef[i];
     }
   }
 
   // calculate the data points per tap
   float m = ts / tapRate;
   // calculate the total number of push and pull taps
-  float nTaps = n * (1 / m);
+  float nTaps = n * (1 / m); // his value is 6,000 for check2.lvm
+  // std::cout << nTaps / 2 << "\n";
+  //std::cout << nTaps;
+  
   // create an array of booleans the size of signalRef
   int *extended = new int[n];
   int *retracted = new int[n];
@@ -51,14 +56,14 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   int j = 0;
   int k = 0;
   int flag = 0;
-  float thresh = signalRef[max_jon(signalRef, n)] / 2;
-  for (size_t i = 0; i < n - 1; i++) {
+  float thresh = signal[max_jon(signal, n)] / 2;
+  for (size_t i = 0; i < n; i++) {
     // store the extended and retracted tapper data
-    if (signalRef[i] > thresh) {
+    if (signal[i] > thresh) {
       extended[i] = 1;
       retracted[i] = 0;
     }
-    if (signalRef[i] < thresh) {
+    if (signal[i] < thresh) {
       extended[i] = 0;
       retracted[i] = 1;
     }
@@ -84,20 +89,27 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
       }
     }
   }
+  //std::cout << k << "\n";
+  //std::cout << j << "\n";
   delete[] extended;
   delete[] retracted;
 
   // dynamically allocate memory to store leading and trailing indices
   int nLeading = 0;
   int nTrailing = 0;
+  
+  // this is where the problem is
   for (size_t i = 0; i < nTaps / 2; i++) {
     if (&leading[i] != NULL) {
       nLeading++;
     }
+    std::cout << nLeading << "\n";
     if (&trailing[i] != NULL) {
       nTrailing++;
     }
   }
+  // std::cout << nLeading << "\n";
+  // std::cout << nTrailing << "\n";
   size_t *pushPullIndices = new size_t[nTrailing + nLeading];
   if (nLeading > nTrailing) {
     for (int i = 0; i < nLeading; i++) {
@@ -112,6 +124,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
     for (int i = 0; i < nTrailing; i++) {
       pushPullIndices[nLeading + i] = trailing[i];
       if (i == nLeading + 1) {
+      // if (i == nLeading) {
         // skip this indices
       } else {
         pushPullIndices[i] = leading[i];
