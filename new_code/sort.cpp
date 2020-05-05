@@ -45,16 +45,14 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   // calculate the data points per tap
   float m = ts / tapRate;
   // calculate the total number of push and pull taps
-  size_t nTaps = n * (1 / m); // this value is 6,000 for check2.lvm
-  // std::cout << nTaps / 2 << "\n";
-
-  //cout << "nTaps: " << nTaps << "\n";
+  size_t nTaps = n * (1 / m);
 
   // create an array of booleans the size of signalRef
   int *extended = new int[n];
   int *retracted = new int[n];
   int *leading = new int[nTaps];
   int *trailing = new int[nTaps];
+
   // find pulse edges of the tap signal
   int j = 0;
   int k = 0;
@@ -92,32 +90,14 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
       }
     }
   }
-  // std::cout << k-1 << "\n";
-  // std::cout << j-1 << "\n";
   delete[] extended;
   delete[] retracted;
 
   // dynamically allocate memory to store leading and trailing indices
-  int nLeading = 0;
-  int nTrailing = 0;
+  int nLeading = j - 1;
+  int nTrailing = k - 1;
 
-  // this is where the problem is
-  /*
-  for (size_t i = 0; i < nTaps / 2; i++) {
-    if (&leading[i] != NULL) {
-      nLeading++;
-    }
-    //std::cout << nLeading << "\n";
-    if (&trailing[i] != NULL) {
-      nTrailing++;
-    }
-  }
-  */
-  nLeading = j-1;
-  nTrailing = k-1;
-
-  //std::cout << nLeading << "\n";
-  //std::cout << nTrailing << "\n";
+  // allocates edges of tap signal
   size_t *pushPullIndices = new size_t[nTrailing + nLeading];
   if (nLeading > nTrailing) {
     for (int i = 0; i < nLeading; i++) {
@@ -132,8 +112,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
     for (int i = 0; i < nTrailing; i++) {
       pushPullIndices[nLeading + i] = trailing[i];
       if (i == nLeading + 1) {
-        // if (i == nLeading) {
-        // skip this indices
+        // do nothing
       } else {
         pushPullIndices[i] = leading[i];
       }
@@ -145,6 +124,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
     }
   }
 
+  // clean up
   delete[] leading;
   delete[] trailing;
 

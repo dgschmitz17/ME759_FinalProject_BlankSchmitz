@@ -1,3 +1,5 @@
+// Authors: Jonathon Blank and Dylan Schmitz
+
 #ifndef FILTER_H
 #define FILTER_H
 

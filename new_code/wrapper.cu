@@ -1,12 +1,10 @@
 /* Authors: Blank, J. and Schmitz, D.
  * This is the main "wrapper" program that computes wave speed
  *
- * Function calls:
- *
  * Compile command: nvcc [FILENAMES HERE] -Xcompiler -O3 -Xcompiler -Wall
  * -Xptxas -O3 -o wrapper
  *
- * FILENAMES: wrapper.cu readLVM.cpp writeCSV.cpp butterHP.cpp butterLP.cpp
+ * FILENAMES: wrapper.cu readCSV.cpp writeCSV.cpp butterHP.cpp butterLP.cpp
  * filtfilt.cpp sort.cpp xcorr.cu
  */
 
@@ -27,21 +25,12 @@ using std::cout;
 
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
-  const char *fileIn = "SaraData.csv"; // file name to load
-
-  // filenames for checking data
-  //const char *filtAcc1File = "filtered_acc1.csv";
-  //const char *filtAcc2File = "filtered_acc2.csv";
-  //const char *pushPullIndicesFile = "push_pull_indices.csv";
+  const char *fileIn = "data.csv"; // file name to load
 
   // file name to which we will write the "push" data
   const char *pushFile = "processed_push.csv";
-  /*
-const char *releaseFile =
-  "processed_release.csv"; // file name to which we will
-                           // write the "release" data
-                           */
-  float **dataMatrix;
+
+  float **dataMatrix; // raw data stored here after read
 
   // number of fields (i.e. data columns) in the .lvm file
   int numFields = 0; // (set by readLVM)
@@ -67,35 +56,21 @@ const char *releaseFile =
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
   cudaEventRecord(start);
-  //cout << "Timing start!" << "\n";
   // ----- timing -----
 
   // call readLVM to load data into a matrix
-  //cout << "Reading input file..." << "\n";
   dataMatrix = readCSV(fileIn, &numFields, &numSamples);
-  //cout << "numSamples: " << numSamples << "\n";
 
   // filter first accelerometer data
   float *filteredAcc1, *filteredAcc2;
   cudaMallocManaged((void **)&filteredAcc1, sizeof(float) * numSamples);
   cudaMallocManaged((void **)&filteredAcc2, sizeof(float) * numSamples);
 
-  // check that the files were read correctly
-  // cout << "Taps: " << dataMatrix[0][2999999] << "\n";
-  // cout << "Acc1: " << dataMatrix[1][2999999] << "\n";
-  // cout << "Acc2: " << dataMatrix[2][2999999] << "\n";
-
-  //cout << "Filtering data..." << "\n";
+  //filter each acc signal independently
   filtfilt(dataMatrix[0], filteredAcc1, numSamples, sampleRate, filter[0],
            filter[1]); // filter acc1 data
   filtfilt(dataMatrix[1], filteredAcc2, numSamples, sampleRate, filter[0],
            filter[1]); // filter acc2 data
-
-  // check the filtered signals
-  //cout << "Acc1: " << filteredAcc1[99] << "\n";
-  //cout << "Acc2: " << filteredAcc2[99] << "\n";
-  //writeCSV(filtAcc1File, filteredAcc1, numSamples, 1); // write out push data
-  //writeCSV(filtAcc2File, filteredAcc2, numSamples, 1); // write out push data
 
   /// sort the push and pull tap indices
   size_t *pushPullIndices;
@@ -105,12 +80,8 @@ const char *releaseFile =
   // array
   // values are ordered as follows: [push1, push2, ... pushN, release1,
   // release2, ... releaseN]
-  //cout << "Finding push/pull indices..." << "\n";
   pushPullIndices =
       sort(dataMatrix[2], sampleRate, numSamples, 100, &nLead, &nTrail);
-
-  // check pushPullIndices
-  //writeCSVInt(pushPullIndicesFile, pushPullIndices, (nLead+nTrail), 1);
 
   // compute wave speed
   bool whichFirst = 0;
@@ -119,9 +90,6 @@ const char *releaseFile =
 
   // determine which comes first: push or release. Also determine how many push
   // and release events we can use
-
-  //cout << "nLead: " << nLead << "\n";
-  //cout << "nTrail: " << nTrail << "\n";
 
   // ------------------ PUSH ............ PUSH ------------------
   if (nLead > nTrail) { // push starts and ends, so throw away last push index,
@@ -178,31 +146,15 @@ const char *releaseFile =
       ind1[i] = pushPullIndices[i];
       ind2[i] = pushPullIndices[nPush + i + 1];
     } // end conditional whichFirst
-
-    // cout << "ind1[i]: " << ind1[i] << "\n";
-    // cout << "ind2[i]: " << ind2[i] << "\n";
   } // end for each push
 
+  // adjust to prevent out-of-bounds access at end
   nPush = nPush - 1;
   nRelease = nRelease - 1;
 
-  //cout << "Begin wave speed computation..." << "\n";
+  //call function to compute wave speed. contains kernel.
   computeWaveSpeed(filteredAcc1, filteredAcc2, &ind1[1], &ind2[1], push, nPush-1, window,
                    sampleRate, travelDist);
-  /*
-    // RELEASE
-    for (i = 0; i < nRelease; i++) {
-      if (!whichFirst) {
-        ind1[i] = pushPullIndices[nPush + i];
-        ind2[i] = pushPullIndices[i + 1];
-      } else {
-        ind1[i] = pushPullIndices[nPush + i];
-        ind2[i] = pushPullIndices[i];
-      } // end conditional whichFirst
-    }   // end for each release
-    computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, release, nRelease,
-                     window, sampleRate, travelDist);
-                     */
 
   // ----- timing -----
   // stop the event and get the elapsed time
@@ -210,15 +162,10 @@ const char *releaseFile =
   cudaEventSynchronize(stop);
   float elapsedTime;
   cudaEventElapsedTime(&elapsedTime, start, stop);
-  //cout << "Timing stop!" << "\n";
   std::cout << "Elapsed Time: " << elapsedTime << "\n";
   // ----- timing -----
 
-  // cout << "push[0]: " << push[0] << "\n";
-
-  //cout << "Writing output file..." << "\n";
   writeCSV(pushFile, push, nPush, 1); // write out push data
-  // writeCSV(releaseFile, release, nRelease, 1); // write out release data
 
   // free all allocated memory
   delete[] dataMatrix;

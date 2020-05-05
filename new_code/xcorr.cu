@@ -12,11 +12,11 @@ using std::cout;
 
 // Computes the cross-correlation of reference and template, storing the result
 // in r.
-// Each thread computes the cross-correlation for one tap event.
+// Each thread computes one correlation value for one tap event.
 //
-// reference is an array of length ## of managed memory.
-// template  is an array of length ## of managed memory.
-// r is an array of length ## of managed memory.
+// reference is an array of managed memory.
+// template  is an array of managed memory.
+// r is an array of managed memory.
 
 __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
                                  size_t lenR, float *r, size_t nInst) {
@@ -25,29 +25,14 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
   int bidx = blockIdx.x;
   int tidx = threadIdx.x;
   int tpb = blockDim.x;
-  // int nbk = gridDim.x;
   int id = bidx * tpb + tidx;
 
+  // determine which data each thread should operate on
   size_t nOps = (lenR - lenT + 1);
   size_t rInst = id / nOps;
   size_t rOp = id % nOps;
 
-  size_t n = nInst * nOps;
-
-  /*
-  if (id == n - 1) {
-    printf("bidx: %d\n", bidx);
-    printf("tidx: %d\n", tidx);
-    printf("tpb: %d\n", tpb);
-    printf("nbk: %d\n", nbk);
-    printf("id: %d\n", id);
-    printf("nOps: %d\n", nOps);
-    printf("rInst: %d\n", rInst);
-    printf("rOp: %d\n", rOp);
-    printf("n: %d\n", n);
-    printf("r[id]: %.1f\n", r[id]);
-  } // end if
-  */
+  size_t n = nInst * nOps; // total number of computations
 
   float mult, A2, B2;
   if (id >= n) { // conditional for threads that do nothing
@@ -60,6 +45,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
     A2 = 0;
     B2 = 0;
 
+    // compute correlation
     for (size_t j = 0; j < lenT; j++) {
       mult += my_templ[j] * my_ref[j];
       A2 += my_templ[j] * my_templ[j];
@@ -67,9 +53,6 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
     } // end for j
 
     r[id] = mult / sqrt(A2 * B2);
-
-    // if (id == n-1)
-    //  printf("r[end]: %f\n", r[id]);
 
   } // end if..else
 
@@ -80,6 +63,8 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
                                size_t *indZ, float *waveSpeed, size_t nInst,
                                float *window, int sampleRate,
                                float travelDist) {
+
+  // variable declarations and allocations
   float **templ, **ref;
   cudaMallocManaged((void **)&templ, sizeof(float *) * nInst);
   cudaMallocManaged((void **)&ref, sizeof(float *) * nInst);
@@ -101,25 +86,13 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   // define the template length according to the second element of window
   templLength = (size_t)(sampleRate * (window[1] - window[0]) / 1000);
 
-  cout << "windowShift: " << windowShift << "\n";
-  // cout << "indA[0]: " << indA[0] << "\n";
-
-  // reset windowShift and templLength if a negative window specified
-  /*
-  if (windowShift < 0){
-    windowShift = 0;
-    templLength = (size_t)(sampleRate * (window[1]) / 1000);
-  }*/
-
   // find template and reference for each instance
   for (size_t inst = 0; inst < nInst; inst++) {
-    // cout << "indA[inst]: " << indA[inst] << "\n";
     // define the template as a segment of sig1 based on indA and the window
     templ[inst] = &sig1[indA[inst] + windowShift];
 
     // define the reference array length by the difference between indZ and indA
     temp = indZ[inst] - (indA[inst] + windowShift);
-    // std::cout << temp << "\n";
     if (inst == 0)
       refLength = temp;
     else
@@ -134,12 +107,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   // determine shared memory size
   size_t nOps = refLength - templLength + 1;
 
-  // print the number of operations performed
-  // std::cout << nOps * nInst << "\n";
-  // std::cout << nInst << "\n";
-
   // perform the cross-correlation between the template and reference signals
-  // float *r = new float[nOps * nInst]; // MANAGED MEMORY
   float *r;
   cudaMallocManaged((void **)&r, sizeof(float) * nOps * nInst);
   size_t threads_per_block =
@@ -150,14 +118,13 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   for (size_t i = 0; i < (nOps * nInst); i++)
     r[i] = 3;
 
+  // call the kernel
   normxcorr_kernel<<<number_of_blocks, threads_per_block>>>(
       templ, templLength, ref, refLength, r, nInst);
 
   cudaDeviceSynchronize();
 
-  // const char *rFile = "r_vals.csv";
-  // writeCSV(rFile, r, (nOps * nInst), 1); // write out push data
-
+  // implement a max delay parameter to prevent eroneously long delays
   size_t maxDelay = (size_t)(0.001 * sampleRate);
   maxDelay = (maxDelay < nOps) ? maxDelay : nOps;
 
@@ -172,8 +139,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       } // end if
     }   // end for each element
 
-    // cout << rMax[inst] << "\n";
-
+    // adjusted index
     k = inst * nOps + maxInd[inst];
 
     // Performing cosine interpolation to estimate lags with sub-frame
@@ -183,7 +149,6 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       theta = atan((r[k - 1] - r[k + 1]) / (2 * r[k] * sin(wo)));
       delta = -theta / wo;
       frameDelay[inst] = maxInd[inst] - 1 + delta;
-      // cout << inst << " delta is " << delta << "\n";
     } else {
       frameDelay[inst] = maxInd[inst] - 1;
     } // end if/else
@@ -191,6 +156,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
     // compute time lag based on frame lag in ms
     timeDelay[inst] = (((float)frameDelay[inst]) / sampleRate) * 1000;
 
+    // compute wave speed = dx/dt
     waveSpeed[inst] = travelDist / timeDelay[inst];
   } // end for each instance
 
@@ -206,7 +172,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
 
 } // end computeTimeDelay
 
-/*
+/* STUFF FOR SHARED MEMORY IMPLEMENTATION IN  THE FUTURE
 size_t nInstPerBlock =
   (threads_per_block / nOps) + (((threads_per_block % nOps) > 1) ? 2 : 1);
 size_t shared_memory_size =

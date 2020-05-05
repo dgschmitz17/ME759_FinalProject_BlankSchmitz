@@ -1,4 +1,4 @@
-// Author: Jon Blank
+// Authors: Jonathon Blank and Dylan Schmitz
 
 #ifndef SORT
 #define SORT

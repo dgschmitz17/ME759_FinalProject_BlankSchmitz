@@ -1,5 +1,5 @@
 /*! Authors: Blank, J. and Schmitz, D.
- * This is the function that reads values from an .lvm file
+ * This is the function that reads values from a .csv file
  */
 
 #include <cstdlib>
@@ -27,10 +27,7 @@ float **readCSV(const char *filename, int *numCols, int *numRows) {
     exit(-1);
   } // end if fileIn doesn't exist
 
-  // .lvm files have 23 lines of non-data text at the top
   int numHeadRows = 0;
-
-  // .lvm files have an extra return after the last row of data
   int numEofReturns = 0;
 
   // initialize number of rows in file to zero before counting
@@ -45,7 +42,7 @@ float **readCSV(const char *filename, int *numCols, int *numRows) {
   int colIndex;
 
   char *ptr;              // pointer used by strtok to split the data buffer
-  const char *tok = ","; // .lvm files are tab delimited
+  const char *tok = ","; // .csv files are comma delimited
 
   int i; // index variable
 

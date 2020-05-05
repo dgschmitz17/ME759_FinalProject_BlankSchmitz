@@ -1,11 +1,11 @@
-// Author: Dylan Schmitz
+// Authors: Jonathon Blank and Dylan Schmitz
 
 #ifndef READ_CSV
 #define READ_CSV
 
 #include <cstdlib>
 
-//float ** readLVM(const char *filename,int *numRows,int *numCols);
+float ** readLVM(const char *filename,int *numRows,int *numCols);
 
 float ** readCSV(const char *filename,int *numRows,int *numCols);
 
