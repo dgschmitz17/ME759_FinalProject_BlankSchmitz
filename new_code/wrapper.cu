@@ -27,12 +27,12 @@ using std::cout;
 
 // ----- BEGIN MAIN PROGRAM -----
 int main(int argc, char *argv[]) {
-  const char *fileIn = "check2.lvm"; // file name to load
+  const char *fileIn = "SaraData.csv"; // file name to load
 
   // filenames for checking data
   //const char *filtAcc1File = "filtered_acc1.csv";
   //const char *filtAcc2File = "filtered_acc2.csv";
-  //const char *pushPullIndicesFile = "push_pull_indices.csv";
+  const char *pushPullIndicesFile = "push_pull_indices.csv";
 
   // file name to which we will write the "push" data
   const char *pushFile = "processed_push.csv";
@@ -49,16 +49,16 @@ const char *releaseFile =
   // number of samples (i.e. data rows) in the .lvm file (set by readLVM)
   int numSamples = 0;
 
-  int sampleRate = 50000; // Hz
+  int sampleRate = 51200; // Hz
 
   // lower and upper cutoff for Butterworth bandpass
   float filter[2] = {150, 5000}; // [Hz]
 
   // start and end of template window for xcorr
-  float window[2] = {0, 2}; // [ms]
+  float window[2] = {-2, 2}; // [ms]
 
   // accelerometer spacing
-  float travelDist = 10; // [mm]
+  float travelDist = 8; // [mm]
 
   int i; // index variable
 
@@ -70,7 +70,8 @@ const char *releaseFile =
   // ----- timing -----
 
   // call readLVM to load data into a matrix
-  dataMatrix = readLVM(fileIn, &numFields, &numSamples);
+  dataMatrix = readCSV(fileIn, &numFields, &numSamples);
+  cout << numSamples << "\n";
 
   // filter first accelerometer data
   float *filteredAcc1, *filteredAcc2;
@@ -82,9 +83,9 @@ const char *releaseFile =
   // cout << "Acc1: " << dataMatrix[1][2999999] << "\n";
   // cout << "Acc2: " << dataMatrix[2][2999999] << "\n";
 
-  filtfilt(dataMatrix[1], filteredAcc1, numSamples, sampleRate, filter[0],
+  filtfilt(dataMatrix[0], filteredAcc1, numSamples, sampleRate, filter[0],
            filter[1]); // filter acc1 data
-  filtfilt(dataMatrix[2], filteredAcc2, numSamples, sampleRate, filter[0],
+  filtfilt(dataMatrix[1], filteredAcc2, numSamples, sampleRate, filter[0],
            filter[1]); // filter acc2 data
 
   // check the filtered signals
@@ -102,10 +103,10 @@ const char *releaseFile =
   // values are ordered as follows: [push1, push2, ... pushN, release1,
   // release2, ... releaseN]
   pushPullIndices =
-      sort(dataMatrix[0], sampleRate, numSamples, 100, &nLead, &nTrail);
+      sort(dataMatrix[2], sampleRate, numSamples, 100, &nLead, &nTrail);
 
   // check pushPullIndices
-  //writeCSVInt(pushPullIndicesFile, pushPullIndices, (nLead+nTrail), 1);
+  writeCSVInt(pushPullIndicesFile, pushPullIndices, (nLead+nTrail), 1);
 
   // compute wave speed
   bool whichFirst = 0;

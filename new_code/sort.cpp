@@ -45,7 +45,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   // calculate the total number of push and pull taps
   float nTaps = n * (1 / m); // his value is 6,000 for check2.lvm
   // std::cout << nTaps / 2 << "\n";
-  //std::cout << nTaps;
+  std::cout << nTaps;
   
   // create an array of booleans the size of signalRef
   int *extended = new int[n];
@@ -103,7 +103,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
     if (&leading[i] != NULL) {
       nLeading++;
     }
-    std::cout << nLeading << "\n";
+    //std::cout << nLeading << "\n";
     if (&trailing[i] != NULL) {
       nTrailing++;
     }

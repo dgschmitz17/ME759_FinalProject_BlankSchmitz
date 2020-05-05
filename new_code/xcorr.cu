@@ -101,13 +101,20 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   // define the template length according to the second element of window
   templLength = (size_t)(sampleRate * (window[1] - window[0]) / 1000);
 
+  // reset windowShift and templLength if a negative window specified
+  if (windowShift < 0){
+    windowShift = 0;
+    templLength = (size_t)(sampleRate * (window[1]) / 1000);
+  }
+
   // find template and reference for each instance
   for (size_t inst = 0; inst < nInst; inst++) {
     // define the template as a segment of sig1 based on indA and the window
-    templ[inst] = &sig1[indA[inst] + windowShift];
+    templ[inst] = &sig1[indA[inst] + windowShift]; 
 
     // define the reference array length by the difference between indZ and indA
     temp = indZ[inst] - (indA[inst] + windowShift);
+    //std::cout << temp << "\n";
     if (inst == 0)
       refLength = temp;
     else
@@ -116,17 +123,22 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
     // define the reference as a segment of sig2 starting at the same index as
     // templ
     ref[inst] = &sig2[indA[inst] + windowShift];
+    
   } // end for
 
   // determine shared memory size
   size_t nOps = refLength - templLength + 1;
+
+  // print the number of operations performed
+  std::cout << nOps * nInst << "\n";
+  std::cout << nInst << "\n";
 
   // perform the cross-correlation between the template and reference signals
   // float *r = new float[nOps * nInst]; // MANAGED MEMORY
   float *r;
   cudaMallocManaged((void **)&r, sizeof(float) * nOps * nInst);
   size_t threads_per_block =
-      512; // may need to change depending on shared memory size
+      1024; // may need to change depending on shared memory size
   size_t number_of_blocks =
       ((nOps * nInst) + threads_per_block - 1) / threads_per_block;
 
@@ -163,7 +175,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       theta = atan((r[k - 1] - r[k + 1]) / (2 * r[k] * sin(wo)));
       delta = -theta / wo;
       frameDelay[inst] = maxInd[inst] - 1 + delta;
-      cout << inst << " delta is " << delta << "\n";
+      //cout << inst << " delta is " << delta << "\n";
     } else {
       frameDelay[inst] = maxInd[inst] - 1;
     } // end if/else
