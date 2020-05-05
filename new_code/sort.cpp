@@ -9,6 +9,8 @@
 #include <cstddef>
 #include "sort.h"
 
+using std::cout;
+
 // finds the max of a given array
 int max_jon(const float *arr, size_t size) {
   // initialize the max
@@ -43,9 +45,10 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   // calculate the data points per tap
   float m = ts / tapRate;
   // calculate the total number of push and pull taps
-  float nTaps = n * (1 / m); // his value is 6,000 for check2.lvm
+  float nTaps = n * (1 / m); // this value is 6,000 for check2.lvm
   // std::cout << nTaps / 2 << "\n";
-  std::cout << nTaps;
+
+  cout << "nTaps: " << nTaps << "\n";
   
   // create an array of booleans the size of signalRef
   int *extended = new int[n];
@@ -99,7 +102,7 @@ size_t *sort(const float *signalRef, size_t ts, size_t n, size_t tapRate,
   int nTrailing = 0;
   
   // this is where the problem is
-  for (size_t i = 0; i < nTaps / 2; i++) {
+  for (size_t i = 0; i < nTaps; i++) {
     if (&leading[i] != NULL) {
       nLeading++;
     }

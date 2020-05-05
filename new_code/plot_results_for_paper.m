@@ -4,7 +4,8 @@ clear; clc; close all;
 
 %% Load file(s)
 baseDir = cd;
-cd('C:\Users\jonat\Documents\UW\ME759\Project\ME759_FinalProject_BlankSchmitz\new_code\');
+% cd('C:\Users\jonat\Documents\UW\ME759\Project\ME759_FinalProject_BlankSchmitz\new_code\');
+cd('G:\My Drive\Dylan\Classes\2020 - Spring\ME 759 - HPC for Applications in Engineering\FinalProject\new_code\');
 [f,d] = uigetfile('*.lvm');
 filenames.lvm = [d '\' f];
 % filenames = [];
@@ -119,8 +120,9 @@ plot(rvals_parsed);
 %% Load and plot Sara's processed data
 clc; close all;
 % saradata = csvread('SaraData.csv');
-cd('C:\Users\jonat\Documents\UW\ME759\Project\ME759_FinalProject_BlankSchmitz\new_code\troubleshooting');
-push = csvread('processed_push.csv');
+% cd('C:\Users\jonat\Documents\UW\ME759\Project\ME759_FinalProject_BlankSchmitz\new_code\troubleshooting');
+cd('G:\My Drive\Dylan\Classes\2020 - Spring\ME 759 - HPC for Applications in Engineering\FinalProject\new_code\');
+% push = csvread('processed_push.csv');
 % release = csvread('processed_release.csv');
 % tapInds = csvread('sortedTap.csv');
 figure
