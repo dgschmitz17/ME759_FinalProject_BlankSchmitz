@@ -25,7 +25,7 @@ __global__ void normxcorr_kernel(float **templ, size_t lenT, float **ref,
   int bidx = blockIdx.x;
   int tidx = threadIdx.x;
   int tpb = blockDim.x;
-  int nbk = gridDim.x;
+  // int nbk = gridDim.x;
   int id = bidx * tpb + tidx;
 
   size_t nOps = (lenR - lenT + 1);
@@ -101,20 +101,25 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   // define the template length according to the second element of window
   templLength = (size_t)(sampleRate * (window[1] - window[0]) / 1000);
 
+  cout << "windowShift: " << windowShift << "\n";
+  // cout << "indA[0]: " << indA[0] << "\n";
+
   // reset windowShift and templLength if a negative window specified
+  /*
   if (windowShift < 0){
     windowShift = 0;
     templLength = (size_t)(sampleRate * (window[1]) / 1000);
-  }
+  }*/
 
   // find template and reference for each instance
   for (size_t inst = 0; inst < nInst; inst++) {
+    // cout << "indA[inst]: " << indA[inst] << "\n";
     // define the template as a segment of sig1 based on indA and the window
-    templ[inst] = &sig1[indA[inst] + windowShift]; 
+    templ[inst] = &sig1[indA[inst] + windowShift];
 
     // define the reference array length by the difference between indZ and indA
     temp = indZ[inst] - (indA[inst] + windowShift);
-    //std::cout << temp << "\n";
+    // std::cout << temp << "\n";
     if (inst == 0)
       refLength = temp;
     else
@@ -123,15 +128,15 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
     // define the reference as a segment of sig2 starting at the same index as
     // templ
     ref[inst] = &sig2[indA[inst] + windowShift];
-    
+
   } // end for
 
   // determine shared memory size
   size_t nOps = refLength - templLength + 1;
 
   // print the number of operations performed
-  std::cout << nOps * nInst << "\n";
-  std::cout << nInst << "\n";
+  // std::cout << nOps * nInst << "\n";
+  // std::cout << nInst << "\n";
 
   // perform the cross-correlation between the template and reference signals
   // float *r = new float[nOps * nInst]; // MANAGED MEMORY
@@ -153,10 +158,13 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
   // const char *rFile = "r_vals.csv";
   // writeCSV(rFile, r, (nOps * nInst), 1); // write out push data
 
+  size_t maxDelay = (size_t)(0.001 * sampleRate);
+  maxDelay = (maxDelay < nOps) ? maxDelay : nOps;
+
   // find the maximum correlation value
   for (size_t inst = 0; inst < nInst; inst++) {
     rMax[inst] = 0;
-    for (size_t i = 0; i < nOps; i++) {
+    for (size_t i = 0; i < maxDelay; i++) {
       size_t j = inst * nOps + i;
       if (r[j] > rMax[inst]) {
         rMax[inst] = r[j];
@@ -175,7 +183,7 @@ __host__ void computeWaveSpeed(float *sig1, float *sig2, size_t *indA,
       theta = atan((r[k - 1] - r[k + 1]) / (2 * r[k] * sin(wo)));
       delta = -theta / wo;
       frameDelay[inst] = maxInd[inst] - 1 + delta;
-      //cout << inst << " delta is " << delta << "\n";
+      // cout << inst << " delta is " << delta << "\n";
     } else {
       frameDelay[inst] = maxInd[inst] - 1;
     } // end if/else

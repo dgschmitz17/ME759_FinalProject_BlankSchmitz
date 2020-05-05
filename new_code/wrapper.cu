@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   // filenames for checking data
   //const char *filtAcc1File = "filtered_acc1.csv";
   //const char *filtAcc2File = "filtered_acc2.csv";
-  const char *pushPullIndicesFile = "push_pull_indices.csv";
+  //const char *pushPullIndicesFile = "push_pull_indices.csv";
 
   // file name to which we will write the "push" data
   const char *pushFile = "processed_push.csv";
@@ -67,13 +67,13 @@ const char *releaseFile =
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
   cudaEventRecord(start);
-  cout << "Timing start!" << "\n";
+  //cout << "Timing start!" << "\n";
   // ----- timing -----
 
   // call readLVM to load data into a matrix
-  cout << "Reading input file..." << "\n";
+  //cout << "Reading input file..." << "\n";
   dataMatrix = readCSV(fileIn, &numFields, &numSamples);
-  cout << "numSamples: " << numSamples << "\n";
+  //cout << "numSamples: " << numSamples << "\n";
 
   // filter first accelerometer data
   float *filteredAcc1, *filteredAcc2;
@@ -85,7 +85,7 @@ const char *releaseFile =
   // cout << "Acc1: " << dataMatrix[1][2999999] << "\n";
   // cout << "Acc2: " << dataMatrix[2][2999999] << "\n";
 
-  cout << "Filtering data..." << "\n";
+  //cout << "Filtering data..." << "\n";
   filtfilt(dataMatrix[0], filteredAcc1, numSamples, sampleRate, filter[0],
            filter[1]); // filter acc1 data
   filtfilt(dataMatrix[1], filteredAcc2, numSamples, sampleRate, filter[0],
@@ -105,7 +105,7 @@ const char *releaseFile =
   // array
   // values are ordered as follows: [push1, push2, ... pushN, release1,
   // release2, ... releaseN]
-  cout << "Finding push/pull indices..." << "\n";
+  //cout << "Finding push/pull indices..." << "\n";
   pushPullIndices =
       sort(dataMatrix[2], sampleRate, numSamples, 100, &nLead, &nTrail);
 
@@ -186,8 +186,8 @@ const char *releaseFile =
   nPush = nPush - 1;
   nRelease = nRelease - 1;
 
-  cout << "Begin wave speed computation..." << "\n";
-  computeWaveSpeed(filteredAcc1, filteredAcc2, ind1, ind2, push, nPush, window,
+  //cout << "Begin wave speed computation..." << "\n";
+  computeWaveSpeed(filteredAcc1, filteredAcc2, &ind1[1], &ind2[1], push, nPush-1, window,
                    sampleRate, travelDist);
   /*
     // RELEASE
@@ -210,13 +210,13 @@ const char *releaseFile =
   cudaEventSynchronize(stop);
   float elapsedTime;
   cudaEventElapsedTime(&elapsedTime, start, stop);
-  cout << "Timing stop!" << "\n";
+  //cout << "Timing stop!" << "\n";
   std::cout << "Elapsed Time: " << elapsedTime << "\n";
   // ----- timing -----
 
   // cout << "push[0]: " << push[0] << "\n";
 
-  cout << "Writing output file..." << "\n";
+  //cout << "Writing output file..." << "\n";
   writeCSV(pushFile, push, nPush, 1); // write out push data
   // writeCSV(releaseFile, release, nRelease, 1); // write out release data
 

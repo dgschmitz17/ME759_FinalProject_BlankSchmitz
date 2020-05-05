@@ -122,13 +122,13 @@ clc; close all;
 % saradata = csvread('SaraData.csv');
 % cd('C:\Users\jonat\Documents\UW\ME759\Project\ME759_FinalProject_BlankSchmitz\new_code\troubleshooting');
 cd('G:\My Drive\Dylan\Classes\2020 - Spring\ME 759 - HPC for Applications in Engineering\FinalProject\new_code\');
-% push = csvread('processed_push.csv');
+push = csvread('processed_push.csv');
 % release = csvread('processed_release.csv');
 % tapInds = csvread('sortedTap.csv');
-figure
-plot(M(1:10000,1)); hold on
-plot(M(1:10000,2))
-plot(M(1:10000,3))
+% figure
+% plot(M(1:10000,1)); hold on
+% plot(M(1:10000,2))
+% plot(M(1:10000,3))
 
 %timeVect = linspace(0,60,3000);
 
